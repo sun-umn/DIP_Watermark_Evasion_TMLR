@@ -1,8 +1,24 @@
 from PIL import Image
 import torch
 import math
+import numpy as np
 from pytorch_msssim import ssim, ms_ssim
 from torchvision import transforms
+
+
+def uint8_to_float(img_orig):
+    return img_orig.astype(np.float32) / 255.
+
+
+def float_to_int(img_float):
+    return (img_float * 255).round().astype(np.int16)
+
+
+def img_np_to_tensor(img_np):
+    img_np = np.transpose(img_np, [2, 0, 1])
+    img_np = img_np[np.newaxis, :, :, :]
+    img_tensor = torch.from_numpy(img_np)
+    return img_tensor
 
 
 # ==== Adapted from: https://github.com/XuandongZhao/WatermarkAttacker/tree/main ===

@@ -106,7 +106,6 @@ def main(args):
     img_watermarked_bgr_tensor = img_np_to_tensor(img_watermarked_bgr_float, device)  # DIP input tensor
     # DIP params
     show_every = 5
-    exp_weight = 0.99  # Exponential smoothing factor
     total_iters = 200
     LR = 0.01
     # reg_noise_std = 1./20.
