@@ -21,7 +21,6 @@ def main(args):
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
-
     example_img_path = args.example_img_path
     # === Read in image ==> 1) bgr 2) uint8
     img_orig_bgr = cv2.imread(example_img_path)
