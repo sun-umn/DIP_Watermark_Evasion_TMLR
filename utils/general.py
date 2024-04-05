@@ -7,18 +7,48 @@ from torchvision import transforms
 
 
 def uint8_to_float(img_orig):
+    """
+        Convert a uint8 image into float with range [0, 1]
+    """
     return img_orig.astype(np.float32) / 255.
 
 
 def float_to_int(img_float):
+    """
+        Convert a float image with range [0, 1] into uint 8 with range [0 255]
+    """
     return (img_float * 255).round().astype(np.int16)
 
 
 def img_np_to_tensor(img_np):
+    """
+        Convert numpy image (float with range [0, 1], shape (N, N, 3)) into tensor input with shape (1, 3, N, N)
+    """
     img_np = np.transpose(img_np, [2, 0, 1])
     img_np = img_np[np.newaxis, :, :, :]
     img_tensor = torch.from_numpy(img_np)
     return img_tensor
+
+
+def tensor_output_to_image_np(out_tensor):
+    """
+        Convert a tensor output with shape (1, 3, N, N) into float image with shape (3, N, N) and range [0, 1]
+    """
+    return np.transpose(torch.clamp(out_tensor.detach().cpu(), 0, 1).numpy()[0, :, :, :], [1, 2, 0])
+
+
+def watermark_np_to_str(watermark_np):
+    """
+        Convert a watermark in np format into a str to display.
+    """
+    return "".join([str(i) for i in watermark_np.tolist()])
+
+
+def compute_bitwise_acc(watermark_gt, watermark_decoded):
+    """
+        Compute the bitwise acc., both inputs in ndarray.
+    """
+    return np.mean(watermark_gt == watermark_decoded)
 
 
 # ==== Adapted from: https://github.com/XuandongZhao/WatermarkAttacker/tree/main ===
