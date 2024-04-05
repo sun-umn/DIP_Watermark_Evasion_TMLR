@@ -108,7 +108,7 @@ def main(args):
     show_every = 5
     exp_weight = 0.99  # Exponential smoothing factor
     total_iters = 200
-    LR = 0.001
+    LR = 0.01
     # reg_noise_std = 1./20.
     reg_noise_std = 0
     params = model.parameters()
