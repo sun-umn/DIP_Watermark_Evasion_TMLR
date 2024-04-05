@@ -9,9 +9,11 @@ import numpy as np
 # === Project Import ===
 from utils.general import watermark_np_to_str
 from utils.build import get_watermarkers
+from evations import get_evasion_alg
 
 
 def main(args):
+    # === Some Dummy Configs ===
     device = torch.device("cuda")   
 
     example_img_path = args.example_img_path
@@ -28,11 +30,29 @@ def main(args):
         "watermark_gt": watermark_gt
     }
     watermarker = get_watermarkers(watermarker_configs)
-    print("")
+    # Generate watermared_image
+    img_w_bgr = watermarker.encode(img_orig_bgr)
+
+    # === Get Evasion algorithm ===
+    evader = get_evasion_alg(args.evade_method)
+    evader_cfgs = {
+        "arch": "vanila",   # Used in DIP to select the variant architecture
+        "show_every": 10,   # Used in DIP to log interm. result
+        "total_iters": 200, # Used in DIP as the max_iter
+        "lr": 0.01,         # Used in DIP as the learning rate
+    }
+    evasion_res = evader(
+        img_orig_bgr, img_w_bgr,  watermarker, watermark_gt, evader_cfgs,
+        save_interm=True, verbose=True
+    )
+
+    print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
+    print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
+
 
 
 if __name__ == "__main__":
-    print("\n***** This is a single image demo to evade invisible watermark by DIP ***** \n")
+    print("\n***** This is demo of single image evasion ***** \n")
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
@@ -40,8 +60,12 @@ if __name__ == "__main__":
         default=os.path.join("examples", "ori_imgs", "000000000711.png")
     )
     parser.add_argument(
-        "--watermarker", dest="watermarker", type=str, help="Speficifation of watermarking method.",
+        "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method.",
         default="dwtDctSvd"
+    )
+    parser.add_argument(
+        "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
+        default="dip"
     )
     args = parser.parse_args()
     main(args)

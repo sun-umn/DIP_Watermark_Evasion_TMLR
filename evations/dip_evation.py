@@ -9,15 +9,15 @@ from utils.general import uint8_to_float, float_to_int, img_np_to_tensor, \
 
 
 def get_model(dig_cfgs):
-    if dig_cfgs.arch == "vanila":
+    if dig_cfgs["arch"] == "vanila":
         dip_model = get_net_dip()
     else:
         raise RuntimeError("Unsupported DIP architecture.")
-
+    return dip_model
 
 
 def dip_evasion_single_img(
-    im_orig_uint8_bgr, im_w_unit8_bgr, decoder, watermark_gt, dip_cfgs, 
+    im_orig_uint8_bgr, im_w_unit8_bgr, watermarker, watermark_gt, dip_cfgs, 
     device=torch.device("cuda"), dtype=torch.float, save_interm=False, detection_threshold=0.75,
     verbose=False
 ):
@@ -83,7 +83,7 @@ def dip_evasion_single_img(
 
             # Decode the recon image and compute the bitwise acc.
             img_recon_bgr_int8 = img_recon_np_int.astype(np.uint8)
-            watermark_recon = decoder.decode(img_recon_bgr_int8)
+            watermark_recon = watermarker.decode(img_recon_bgr_int8)
             watermark_recon_str = watermark_np_to_str(watermark_recon)
             bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
             bitwise_acc_log.append(bitwise_acc)
