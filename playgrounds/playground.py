@@ -10,11 +10,17 @@ import numpy as np
 from utils.general import watermark_np_to_str
 from utils.build import get_watermarkers
 from evations import get_evasion_alg
+from utils.plottings import plot_dip_res
 
 
 def main(args):
     # === Some Dummy Configs ===
     device = torch.device("cuda")   
+    vis_root_dir = os.path.join(
+        ".", "Visualizations", "{}_{}".format(args.watermarker, args.evade_method)
+    )
+    os.makedirs(vis_root_dir, exist_ok=True)
+
 
     example_img_path = args.example_img_path
     # === Read in image ==> 1) bgr 2) uint8
@@ -38,7 +44,7 @@ def main(args):
     evader_cfgs = {
         "arch": "vanila",   # Used in DIP to select the variant architecture
         "show_every": 10,   # Used in DIP to log interm. result
-        "total_iters": 200, # Used in DIP as the max_iter
+        "total_iters": 100, # Used in DIP as the max_iter
         "lr": 0.01,         # Used in DIP as the learning rate
     }
     evasion_res = evader(
@@ -48,7 +54,7 @@ def main(args):
 
     print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
     print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
-
+    plot_dip_res(vis_root_dir, evasion_res)
 
 
 if __name__ == "__main__":
