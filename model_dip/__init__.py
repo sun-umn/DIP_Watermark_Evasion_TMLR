@@ -15,20 +15,20 @@ def get_net_dip(input_depth=3, NET_TYPE="skip", pad="reflection", upsample_mode=
     return net
 
 
-def initialize_weights(module):
-    for m in module.modules():
-        if isinstance(m, torch.nn.Conv2d):
-            torch.nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
-            # torch.nn.init.normal_(m.weight, 0, 1)
-            if m.bias is not None:
-                torch.nn.init.normal_(m.bias, 0, 0.01)
-                # torch.nn.init.constant_(m.bias, 0.01)
-        elif isinstance(m, torch.nn.BatchNorm1d):
-            torch.nn.init.constant_(m.weight, 1)
-            torch.nn.init.constant_(m.bias, 0)
-        elif isinstance(m, torch.nn.BatchNorm2d):
-            torch.nn.init.constant_(m.weight, 1)
-            torch.nn.init.constant_(m.bias, 0)
-        elif isinstance(m, torch.nn.Linear):
-            torch.nn.init.normal_(m.weight, 0, 0.1)
-            torch.nn.init.constant_(m.bias, 0)
+# def initialize_weights(module):
+#     for m in module.modules():
+#         if isinstance(m, torch.nn.Conv2d):
+#             torch.nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='leaky_relu')
+#             # torch.nn.init.normal_(m.weight, 0, 1)
+#             if m.bias is not None:
+#                 torch.nn.init.normal_(m.bias, 0, 0.01)
+#                 # torch.nn.init.constant_(m.bias, 0.01)
+#         elif isinstance(m, torch.nn.BatchNorm1d):
+#             torch.nn.init.constant_(m.weight, 1)
+#             torch.nn.init.constant_(m.bias, 0)
+#         elif isinstance(m, torch.nn.BatchNorm2d):
+#             torch.nn.init.constant_(m.weight, 1)
+#             torch.nn.init.constant_(m.bias, 0)
+#         elif isinstance(m, torch.nn.Linear):
+#             torch.nn.init.normal_(m.weight, 0, 0.1)
+#             torch.nn.init.constant_(m.bias, 0)

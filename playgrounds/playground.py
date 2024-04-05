@@ -8,7 +8,7 @@ import numpy as np
 
 # === Project Import ===
 from utils.general import watermark_np_to_str
-from utils.build import get_watermarkers
+from watermarkers import get_watermarkers
 from evations import get_evasion_alg
 from utils.plottings import plot_dip_res
 
