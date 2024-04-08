@@ -27,8 +27,8 @@ def dip_evasion_single_img(
     verbose=False
 ):
     """
-        im_orig_np_bgr --- ndarray with shape (N, N 3) | dtype = np.uint8 | value range - [0, 255]
-        im_w_np_bgr --- ndarray with shape (N, N, 3) | dtype = np.uint8 | value range - [0, 255]
+        im_orig_path --- path to orig image
+        im_w_path --- path to watermarked image
         decoder --- a decoder that: watermark_decoded = decoder.decode(im_w_np_bgr)
         watermark_gt --- ndarray with shape (n,), ground truth watermark
         dip_cfgs --- a dict of dip config params

@@ -7,8 +7,7 @@ import numpy as np
 from .general import save_image_bgr
 
 
-
-def plot_dip_res(save_root, res_log):
+def plot_dip_res(save_root, res_log, detection_threshold=0.75):
     # Plot Iter-PSNR curves and PSNR curves
     fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True)
     iter_data = res_log["iter_log"]
@@ -19,6 +18,7 @@ def plot_dip_res(save_root, res_log):
     ax[1].plot(iter_data, psnr_w_data, label="PSNR (recon - watermarked)")
     ax[1].legend()
     ax[2].plot(iter_data, bw_acc_data, label="Bitwise Acc.")
+    ax[2].hlines(y=detection_threshold, xmin=0, xmax=np.amax(iter_data), ls="dashed", color="black")
     ax[2].legend()
     plt.tight_layout()
     save_name = os.path.join(save_root, "psnr_bt_acc.png")

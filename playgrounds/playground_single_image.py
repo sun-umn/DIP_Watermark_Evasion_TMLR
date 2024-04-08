@@ -36,7 +36,6 @@ def main(args):
 
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
-    watermark_str = watermark_np_to_str(watermark_gt)
 
     # === Initiate a encoder & decoder ===
     watermarker_configs = {
@@ -53,17 +52,20 @@ def main(args):
     evader_cfgs = {
         "arch": "vanila",   # Used in DIP to select the variant architecture
         "show_every": 10,   # Used in DIP to log interm. result
-        "total_iters": 100, # Used in DIP as the max_iter
+        "total_iters": 500, # Used in DIP as the max_iter
         "lr": 0.01,         # Used in DIP as the learning rate
     }
+
+    detection_threshold = 0.75
     evasion_res = evader(
         img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs,
-        save_interm=True, verbose=True
+        save_interm=True, verbose=True, detection_threshold=detection_threshold
     )
 
     print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
     print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
-    plot_dip_res(vis_root_dir, evasion_res)
+    # === Vis result ===
+    plot_dip_res(vis_root_dir, evasion_res, detection_threshold)
 
 
 if __name__ == "__main__":
