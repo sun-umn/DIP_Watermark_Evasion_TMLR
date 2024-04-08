@@ -5,7 +5,14 @@ from PIL import Image
 
 from .base import Watermarker
 
+"""
+    This one calls the stable signature repo in oder to generate the watermarked image.
 
+    Stable Signigure github: https://github.com/facebookresearch/stable_signature
+
+    You should get the above repo work on your machine before calling the class below.
+
+"""
 
 class StableSignatureWatermarker(Watermarker):
     def __init__(

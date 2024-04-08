@@ -22,19 +22,24 @@ def get_model(dig_cfgs):
 #     verbose=False
 # ):
 def dip_evasion_single_img(
-    im_orig_path, im_w_path, watermarker, watermark_gt, dip_cfgs, 
-    device=torch.device("cuda"), dtype=torch.float, save_interm=False, detection_threshold=0.75,
-    verbose=False
+    im_orig_path, im_w_path, watermarker, watermark_gt, dip_cfgs=None
 ):
     """
         im_orig_path --- path to orig image
         im_w_path --- path to watermarked image
-        decoder --- a decoder that: watermark_decoded = decoder.decode(im_w_np_bgr)
+        watermarker --- a watermarker: watermark_decoded = watermarker.decode(im_w_np_bgr)
         watermark_gt --- ndarray with shape (n,), ground truth watermark
         dip_cfgs --- a dict of dip config params
         save_interm --- if set True, will return a list of reconstructed images of the intermediate steps
         detection_threshold --- the threshold of bitwise acc. to determin whether the image is watermarked.
     """
+    assert dip_cfgs is not None, "Must include configs of the dip evation algo."
+    device = dip_cfgs["device"]
+    dtype = dip_cfgs["dtype"]
+    save_interms = dip_cfgs["save_interms"]
+    detection_threshold = dip_cfgs['detection_threshold']
+    verbose = dip_cfgs["verbose"]
+
     watermark_gt_str = watermark_np_to_str(watermark_gt)
     # Init A DIP model
     dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
@@ -75,7 +80,7 @@ def dip_evasion_single_img(
 
             img_recon = tensor_output_to_image_np(net_output)
             img_recon_np_int = float_to_int(img_recon)
-            if save_interm:
+            if save_interms:
                 recon_interm_log.append(img_recon_np_int.astype(np.uint8))
 
             # Compute PSNR

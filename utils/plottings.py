@@ -8,7 +8,7 @@ from .general import save_image_bgr
 
 
 def plot_dip_res(save_root, res_log, detection_threshold=0.75):
-    # Plot Iter-PSNR curves and PSNR curves
+    # Plot Iter-PSNR curves and bitwise acc.
     fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True)
     iter_data = res_log["iter_log"]
     bw_acc_data = res_log["bitwise_acc"]
@@ -37,5 +37,41 @@ def plot_dip_res(save_root, res_log, detection_threshold=0.75):
             recon_img = recon_images[idx]
             save_path = os.path.join(
                 save_vis_root, "iter-{}.png".format(iter_num)
+            )
+            save_image_bgr(recon_img, save_path)
+
+
+def plot_vae_res(save_root, res_log, detection_threshold=0.75):
+    # Plot Quality-PSNR curves and bitwise acc. curves
+    fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True)
+    quality_data = res_log["qualities"]
+    bw_acc_data = res_log["bitwise_acc"]
+    psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
+    ax[0].plot(quality_data, psnr_clean_data, label="PSNR (recon - clean)")
+    ax[0].legend()
+    ax[1].plot(quality_data, psnr_w_data, label="PSNR (recon - watermarked)")
+    ax[1].legend()
+    ax[2].plot(quality_data, bw_acc_data, label="Bitwise Acc.")
+    ax[2].hlines(y=detection_threshold, xmin=0, xmax=np.amax(quality_data), ls="dashed", color="black")
+    ax[2].legend()
+    ax[2].set_xlabel("VAE regeneration quality index")
+    plt.tight_layout()
+    save_name = os.path.join(save_root, "psnr_bt_acc.png")
+    plt.savefig(save_name)
+    plt.close(fig)
+
+    
+    # Vis Intermediate Recon. Images
+    recon_images = res_log["interm_recon"]
+    if len(recon_images) < 1:
+        print("Do not have interm. images saved. Pass saving visualization.")
+    else:
+        print("Visualizing Interm. Recon. Images ...")
+        save_vis_root = os.path.join(save_root, "Vis-Recon-PerQuality")
+        os.makedirs(save_vis_root, exist_ok=True)
+        for idx, quality_number in enumerate(quality_data):
+            recon_img = recon_images[idx]
+            save_path = os.path.join(
+                save_vis_root, "Quality-{}.png".format(quality_number)
             )
             save_image_bgr(recon_img, save_path)

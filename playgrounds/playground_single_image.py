@@ -7,10 +7,10 @@ import math, torch, cv2, argparse
 import numpy as np
 
 # === Project Import ===
-from utils.general import watermark_np_to_str
 from watermarkers import get_watermarkers
 from evations import get_evasion_alg
-from utils.plottings import plot_dip_res
+from utils.plottings import plot_dip_res, plot_vae_res
+
 
 
 def main(args):
@@ -30,12 +30,13 @@ def main(args):
     )
 
     vis_root_dir = os.path.join(
-        ".", "Visualizations", "{}_{}".format(args.watermarker, args.evade_method)
+        ".", "Visualizations", "{}".format(args.watermarker), "{}".format(args.evade_method)
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
+    watermark_gt = np.ones_like(watermark_gt)
 
     # === Initiate a encoder & decoder ===
     watermarker_configs = {
@@ -48,24 +49,49 @@ def main(args):
     watermarker.encode(img_clean_path, img_w_path)
 
     # === Get Evasion algorithm ===
+    detection_threshold = args.detection_threshold
+    print("Setting detection threshold [{:02f}] for the watermark detector.".format(detection_threshold))
     evader = get_evasion_alg(args.evade_method)
-    evader_cfgs = {
-        "arch": "vanila",   # Used in DIP to select the variant architecture
-        "show_every": 10,   # Used in DIP to log interm. result
-        "total_iters": 500, # Used in DIP as the max_iter
-        "lr": 0.01,         # Used in DIP as the learning rate
-    }
 
-    detection_threshold = 0.75
+    # Read configs and execude evasions
+    CONFIGS = {
+        "dip": {
+            "arch": "vanila",   # Used in DIP to select the variant architecture
+            "show_every": 10,   # Used in DIP to log interm. result
+            "total_iters": 500, # Used in DIP as the max_iter
+            "lr": 0.01,         # Used in DIP as the learning rate
+
+            "device": device,
+            "dtype": torch.float,
+            "detection_threshold": detection_threshold,
+            "verbose": True,
+            "save_interms": True
+        },
+
+        "vae": {
+            "arch": "cheng2020-anchor",   # Used in vae to select the variant architecture
+
+            "device": torch.device("cuda"),
+            "detection_threshold": detection_threshold,
+            "verbose": True,
+        }
+    }
+    evader_cfgs = CONFIGS[args.evade_method]
     evasion_res = evader(
-        img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs,
-        save_interm=True, verbose=True, detection_threshold=detection_threshold
+        img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs
     )
 
-    print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
-    print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
     # === Vis result ===
-    plot_dip_res(vis_root_dir, evasion_res, detection_threshold)
+    if args.evade_method.lower() == "dip":
+        print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
+        print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
+        plot_dip_res(vis_root_dir, evasion_res, detection_threshold)
+    elif args.evade_method.lower() == "vae":
+        print("Best evade quality: {}".format(evasion_res["best_evade_quality"]))
+        print("Best evade PSNR   : {:.04f}".format(evasion_res["best_evade_psnr"]))
+        plot_vae_res(vis_root_dir, evasion_res, detection_threshold)
+    else:
+        raise RuntimeError("Un-implemented result summary")
 
 
 if __name__ == "__main__":
@@ -91,7 +117,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="dip"
+        default="vae"
+    )
+    parser.add_argument(
+        "--detection_threshold", dest="detection_threshold", type=float, default=0.75,
+        help="Tunable threhsold to check if the evasion is successful."
     )
     args = parser.parse_args()
     main(args)

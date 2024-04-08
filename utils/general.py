@@ -20,6 +20,10 @@ def float_to_int(img_float):
     return (img_float * 255).round().astype(np.int16)
 
 
+def float_to_uint8(img_float):
+    return (img_float * 255).round().astype(np.uint8)
+
+
 def img_np_to_tensor(img_np):
     """
         Convert numpy image (float with range [0, 1], shape (N, N, 3)) into tensor input with shape (1, 3, N, N)
