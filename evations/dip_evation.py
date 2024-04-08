@@ -1,4 +1,4 @@
-import torch
+import torch, cv2
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 
@@ -16,8 +16,13 @@ def get_model(dig_cfgs):
     return dip_model
 
 
+# def dip_evasion_single_img(
+#     im_orig_uint8_bgr, im_w_unit8_bgr, watermarker, watermark_gt, dip_cfgs, 
+#     device=torch.device("cuda"), dtype=torch.float, save_interm=False, detection_threshold=0.75,
+#     verbose=False
+# ):
 def dip_evasion_single_img(
-    im_orig_uint8_bgr, im_w_unit8_bgr, watermarker, watermark_gt, dip_cfgs, 
+    im_orig_path, im_w_path, watermarker, watermark_gt, dip_cfgs, 
     device=torch.device("cuda"), dtype=torch.float, save_interm=False, detection_threshold=0.75,
     verbose=False
 ):
@@ -42,7 +47,9 @@ def dip_evasion_single_img(
     loss_func = torch.nn.MSELoss()
 
     # Optimize
-    im_w_bgr_float = uint8_to_float(im_w_unit8_bgr)
+    im_w_uint8_bgr = cv2.imread(im_w_path)
+    im_orig_uint8_bgr = cv2.imread(im_orig_path)
+    im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
     im_w_bgr_tensor = img_np_to_tensor(im_w_bgr_float).to(device, dtype=dtype)
     
     iter_log = []
@@ -73,7 +80,7 @@ def dip_evasion_single_img(
 
             # Compute PSNR
             psnr_recon_w = compute_psnr(
-                im_w_unit8_bgr.astype(np.int16), img_recon_np_int, data_range=255  # PSNR of recon v.s. watermarked img
+                im_w_uint8_bgr.astype(np.int16), img_recon_np_int, data_range=255  # PSNR of recon v.s. watermarked img
             )
             psnr_recon_orig = compute_psnr(
                 im_orig_uint8_bgr.astype(np.int16), img_recon_np_int, data_range=255  # PSNR of recon v.s. orig

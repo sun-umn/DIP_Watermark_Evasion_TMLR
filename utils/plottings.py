@@ -15,8 +15,11 @@ def plot_dip_res(save_root, res_log):
     bw_acc_data = res_log["bitwise_acc"]
     psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
     ax[0].plot(iter_data, psnr_clean_data, label="PSNR (recon - clean)")
+    ax[0].legend()
     ax[1].plot(iter_data, psnr_w_data, label="PSNR (recon - watermarked)")
+    ax[1].legend()
     ax[2].plot(iter_data, bw_acc_data, label="Bitwise Acc.")
+    ax[2].legend()
     plt.tight_layout()
     save_name = os.path.join(save_root, "psnr_bt_acc.png")
     plt.savefig(save_name)
@@ -29,6 +32,7 @@ def plot_dip_res(save_root, res_log):
     else:
         print("Visualizing Interm. Recon. Images ...")
         save_vis_root = os.path.join(save_root, "Vis-Interm-Recon")
+        os.makedirs(save_vis_root, exist_ok=True)
         for idx, iter_num in enumerate(iter_data):
             recon_img = recon_images[idx]
             save_path = os.path.join(

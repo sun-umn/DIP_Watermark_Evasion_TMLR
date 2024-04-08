@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 from imwatermark import WatermarkEncoder, WatermarkDecoder
 
 from .base import Watermarker    
@@ -27,16 +28,17 @@ class InvisibleWatermarker(Watermarker):
             self.encoder.loadModel()
             self.decoder.loadModel()
         
-    def encode(self, img_bgr_np):
+    def encode(self, img_input_path, img_output_path):
         """
             Both input and ouput should be:
                 1) ndarray with shape (n, n, 3) 
                 2) bgr channel 
                 3) uint8
         """
+        img_bgr_np = cv2.imread(img_input_path)
         im_w_bgr = self.encoder.encode(img_bgr_np, self.method_str)
-        return im_w_bgr
-    
+        cv2.imwrite(img_output_path, im_w_bgr)
+
     def decode(self, img_bgr_np):
         """
             Input should be:
@@ -50,3 +52,14 @@ class InvisibleWatermarker(Watermarker):
             decoded = np.where(decoded == True, 1, 0)
         return decoded
 
+
+    def decode_from_path(self, img_watermared_path):
+        """
+            Input should be:
+                1) ndarray with shape (n, n, 3) 
+                2) bgr channel 
+                3) uint8
+            Output is sequence in ndarray
+        """
+        img_bgr_np = cv2.imread(img_watermared_path)
+        return self.decode(img_bgr_np)

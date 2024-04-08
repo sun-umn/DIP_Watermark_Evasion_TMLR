@@ -15,15 +15,24 @@ from utils.plottings import plot_dip_res
 
 def main(args):
     # === Some Dummy Configs ===
-    device = torch.device("cuda")   
+    device = torch.device("cuda")
+
+    img_clean_path = os.path.join(
+        args.root_path_im_orig, args.im_name  # Path to a clean image
+    )
+
+    img_w_root_dir = os.path.join(
+        args.root_path_im_w, args. watermarker
+    )
+    os.makedirs(img_w_root_dir, exist_ok=True)
+    img_w_path = os.path.join(
+        img_w_root_dir, args.im_name  # Path to save the watermarked image.
+    )
+
     vis_root_dir = os.path.join(
         ".", "Visualizations", "{}_{}".format(args.watermarker, args.evade_method)
     )
     os.makedirs(vis_root_dir, exist_ok=True)
-
-    example_img_path = args.example_img_path
-    # === Read in image ==> 1) bgr 2) uint8
-    img_orig_bgr = cv2.imread(example_img_path)
 
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
@@ -35,8 +44,9 @@ def main(args):
         "watermark_gt": watermark_gt
     }
     watermarker = get_watermarkers(watermarker_configs)
-    # Generate watermared_image
-    img_w_bgr = watermarker.encode(img_orig_bgr)
+    
+    # Generated watermarked image and save it to img_w_path
+    watermarker.encode(img_clean_path, img_w_path)
 
     # === Get Evasion algorithm ===
     evader = get_evasion_alg(args.evade_method)
@@ -47,7 +57,7 @@ def main(args):
         "lr": 0.01,         # Used in DIP as the learning rate
     }
     evasion_res = evader(
-        img_orig_bgr, img_w_bgr,  watermarker, watermark_gt, evader_cfgs,
+        img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs,
         save_interm=True, verbose=True
     )
 
@@ -61,9 +71,18 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
-        '--example_img_path', type=str, help="Path to the single image example",
-        default=os.path.join("examples", "ori_imgs", "000000000711.png")
+        '--root_path_im_orig', type=str, help="Root folder to the clean images.",
+        default=os.path.join("examples", "ori_imgs")
     )
+    parser.add_argument(
+        "--im_name", dest="im_name", type=str, help="clean image name.",
+        default="000000000711.png"
+    )
+    parser.add_argument(
+        "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
+        default=os.path.join("examples", "watermarked_imgs")
+    )
+
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method.",
         default="dwtDctSvd"

@@ -18,7 +18,7 @@ class StableSignatureWatermarker(Watermarker):
         print("  GT Watermark - {} \n".format(self.key))
 
         self.device = device
-        self.msg_extractor = msg_extractor = torch.jit.load(msg_extractor).to(self.device)
+        self.msg_extractor = torch.jit.load(msg_extractor).to(self.device)
         self.transform_imnet = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -51,7 +51,8 @@ class StableSignatureWatermarker(Watermarker):
         img = Image.open(img_path)
         img = self.transform_imnet(img).unsqueeze(0).to(self.device)
         msg = self.msg_extractor(img)  # b c h w -> b k
-        bool_msg = (msg > 0).squeeze().cpu().numpy().tolist()
+        # bool_msg = (msg > 0).squeeze().cpu().numpy().tolist()
+        bool_msg = (msg > 0).squeeze().cpu().numpy()
         return bool_msg
     
         # bool_key = StableSignatureWatermarker.str2msg(self.key)
