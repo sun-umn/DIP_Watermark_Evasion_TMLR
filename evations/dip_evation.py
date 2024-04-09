@@ -16,11 +16,6 @@ def get_model(dig_cfgs):
     return dip_model
 
 
-# def dip_evasion_single_img(
-#     im_orig_uint8_bgr, im_w_unit8_bgr, watermarker, watermark_gt, dip_cfgs, 
-#     device=torch.device("cuda"), dtype=torch.float, save_interm=False, detection_threshold=0.75,
-#     verbose=False
-# ):
 def dip_evasion_single_img(
     im_orig_path, im_w_path, watermarker, watermark_gt, dip_cfgs=None
 ):

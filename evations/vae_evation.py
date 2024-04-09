@@ -54,13 +54,10 @@ def vae_evasion_single_img(
     watermark_gt_str = watermark_np_to_str(watermark_gt)
     
     # == Init the vae evasion
+    # Set severity range
     evader_method = evader_cfg["arch"]
     quality_range = list(range(1, 7, 1)) if evader_method in ['cheng2020-anchor'] else list(range(1, 9, 1))
-
-
-    
-
-
+    # read images
     im_orig_uint8_bgr = cv2.imread(im_orig_path)
     im_w_uint8_bgr = cv2.imread(im_w_path)
 
