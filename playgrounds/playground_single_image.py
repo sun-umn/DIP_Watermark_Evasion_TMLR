@@ -52,7 +52,7 @@ def main(args):
         "dip": {
             "arch": "vanila",   # Used in DIP to select the variant architecture
             "show_every": 10,   # Used in DIP to log interm. result
-            "total_iters": 1000, # Used in DIP as the max_iter
+            "total_iters": 500, # Used in DIP as the max_iter
             "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": device,
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="clean image name.",
-        default="000000001442.png"
+        default="000000001089.png"
     )
     parser.add_argument(
         "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
