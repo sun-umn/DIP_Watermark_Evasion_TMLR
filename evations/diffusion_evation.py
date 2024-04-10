@@ -11,13 +11,13 @@
 
 """
 # ## Uncomment Below to run the unit test 
-#########################################
+# ########################################
 # import sys, os
 # dir_path = os.path.abspath(".")
 # sys.path.append(dir_path)
 # dir_path = os.path.abspath("..")
 # sys.path.append(dir_path)
-############  ############  #############
+# ###########  ############  #############
 
 import torch
 import numpy as np
@@ -35,25 +35,12 @@ class DiffWMAttacker():
         self.captions = captions
         print(f'Diffuse attack initialized with noise step {self.noise_step} and use prompt {len(self.captions)}')
 
-    def regenerate(self, im_w_path, return_latents=False, return_dist=False):
+    def regenerate(self, im_w_path):
         with torch.no_grad():
             generator = torch.Generator(self.device).manual_seed(1024)
             latents_buf = []
             prompts_buf = []
-            outs_buf = []
             timestep = torch.tensor([self.noise_step], dtype=torch.long, device=self.device)
-            ret_latents = []
-
-            # def batched_attack(latents_buf, prompts_buf, outs_buf):
-            #     latents = torch.cat(latents_buf, dim=0)
-            #     images = self.pipe(prompts_buf,
-            #                        head_start_latents=latents,
-            #                        head_start_step=50 - max(self.noise_step // 20, 1),
-            #                        guidance_scale=7.5,
-            #                        generator=generator, )
-            #     images = images[0]
-            #     for img, out in zip(images, outs_buf):
-            #         img.save(out)
 
             prompt = ""
             img = Image.open(im_w_path)
