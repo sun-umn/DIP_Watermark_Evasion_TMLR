@@ -9,8 +9,7 @@ import numpy as np
 # === Project Import ===
 from watermarkers import get_watermarkers
 from evations import get_evasion_alg
-from utils.plottings import plot_dip_res, plot_vae_res
-
+from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res
 
 
 def main(args):
@@ -29,14 +28,9 @@ def main(args):
         img_w_root_dir, args.im_name  # Path to save the watermarked image.
     )
 
-    vis_root_dir = os.path.join(
-        ".", "Visualizations", "{}".format(args.watermarker), "{}".format(args.evade_method)
-    )
-    os.makedirs(vis_root_dir, exist_ok=True)
-
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
-    watermark_gt = np.ones_like(watermark_gt)
+    # watermark_gt = np.ones_like(watermark_gt)
 
     # === Initiate a encoder & decoder ===
     watermarker_configs = {
@@ -58,7 +52,7 @@ def main(args):
         "dip": {
             "arch": "vanila",   # Used in DIP to select the variant architecture
             "show_every": 10,   # Used in DIP to log interm. result
-            "total_iters": 500, # Used in DIP as the max_iter
+            "total_iters": 1000, # Used in DIP as the max_iter
             "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": device,
@@ -74,9 +68,21 @@ def main(args):
             "device": torch.device("cuda"),
             "detection_threshold": detection_threshold,
             "verbose": True,
+        },
+
+        "corrupters": {
+            "arch": args.arch,
+            "detection_threshold": detection_threshold,
+            "verbose": True,
         }
     }
     evader_cfgs = CONFIGS[args.evade_method]
+    # Create log folder 
+    vis_root_dir = os.path.join(
+        ".", "Vis_{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format(args.evade_method), "{}".format(evader_cfgs["arch"])
+    )
+    os.makedirs(vis_root_dir, exist_ok=True)
+
     evasion_res = evader(
         img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs
     )
@@ -90,11 +96,15 @@ def main(args):
         print("Best evade quality: {}".format(evasion_res["best_evade_quality"]))
         print("Best evade PSNR   : {:.04f}".format(evasion_res["best_evade_psnr"]))
         plot_vae_res(vis_root_dir, evasion_res, detection_threshold)
+    elif args.evade_method.lower() == "corrupters":
+        print("Use - {} - post-processing: ".format(evader_cfgs["arch"]))
+        plot_corruption_res(vis_root_dir, evasion_res, detection_threshold, method_name=evader_cfgs["arch"])
     else:
         raise RuntimeError("Un-implemented result summary")
 
 
 if __name__ == "__main__":
+
     print("\n***** This is demo of single image evasion ***** \n")
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
@@ -104,7 +114,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="clean image name.",
-        default="000000000711.png"
+        default="000000001442.png"
     )
     parser.add_argument(
         "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
@@ -113,11 +123,15 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method.",
-        default="dwtDctSvd"
+        default="rivaGan"
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="vae"
+        default="corrupters"
+    )
+    parser.add_argument(
+        "--arch", dest="arch", type=str, help="Secondary specification of evasion method (if there are other choices).",
+        default="bm3d"
     )
     parser.add_argument(
         "--detection_threshold", dest="detection_threshold", type=float, default=0.75,
@@ -127,3 +141,4 @@ if __name__ == "__main__":
     main(args)
 
     print("\n***** Completed. *****\n")
+

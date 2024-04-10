@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageEnhance
 from bm3d import bm3d_rgb
+from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 
 """
     All tranditional corruption should have a method regenerate which takes in a path input,
@@ -22,10 +23,12 @@ from bm3d import bm3d_rgb
 
 from utils.general import uint8_to_float, float_to_uint8, rgb2bgr
 from skimage.util import random_noise
+from utils.general import uint8_to_float, float_to_uint8, img_np_to_tensor, \
+    tensor_output_to_image_np, watermark_np_to_str, compute_bitwise_acc, rgb2bgr
 
 
 class GaussianBlurAttacker():
-    def __init__(self, kernel_size=5, sigma=1):
+    def __init__(self, sigma=1, kernel_size=5):
         self.kernel_size = kernel_size
         self.sigma = sigma
 
@@ -64,8 +67,9 @@ class BM3DAttacker():
 
 
 class JPEGAttacker():
-    def __init__(self, quality=80):
-        self.quality = quality
+    def __init__(self, quality=0.8):
+        self.quality = int(quality * 100)
+        print("JPEG compression quality: {:d}".format(self.quality))
 
     def regenerate(self, im_w_path):
         img_bgr = cv2.imread(im_w_path)
@@ -97,6 +101,128 @@ class ContrastAttacker():
         img = enhancer.enhance(self.contrast)
         img = rgb2bgr(np.array(img))
         return img
+
+
+def get_corrupter(cfg, level=None):
+    method_name = cfg["arch"]
+    if level is None:
+        level = cfg["init_level"]
+    
+    if method_name.lower() == "gaussian_blur":
+        return GaussianBlurAttacker(level)
+    elif method_name.lower() == "gaussian_noise":
+        return GaussianNoiseAttacker(level)
+    elif method_name.lower() == "bm3d":
+        return BM3DAttacker(level)
+    elif method_name.lower() == "jpeg":
+        return JPEGAttacker(level)
+    elif method_name.lower() == "brightness":
+        return BrightnessAttacker(level)
+    elif method_name.lower() == "contrast":
+        return ContrastAttacker(level)
+    else:
+        raise RuntimeError("Un-implemented traditional image corruptions.")
+
+
+def get_levels(cfg):
+    """
+        Get Grid search intervals. for different heuristic methods.
+    """
+    method_name = cfg["arch"]
+
+    if method_name.lower() == "gaussian_blur":
+        return np.arange(1, 101, 5) / 20. 
+    elif method_name.lower() == "gaussian_noise":
+        return np.arange(1, 51, 5) / 100.
+    elif method_name.lower() == "bm3d":
+        return np.arange(1, 101, 10) / 100. 
+    elif method_name.lower() == "jpeg":
+        return np.arange(1, 101, 2) / 100. 
+    elif method_name.lower() == "brightness":
+        # return np.arange(81, 101, 2) / 100. 
+        return np.arange(1, 101, 5) / 100.
+    elif method_name.lower() == "contrast":
+        # return np.arange(81, 101, 2) / 100. 
+        return np.arange(1, 101, 5) / 100.  
+    else:
+        raise RuntimeError("Un-implemented traditional image corruptions.")
+    
+
+def corruption_evation_single_img(
+    im_orig_path, im_w_path, watermarker, watermark_gt, evader_cfg=None    
+):
+    """
+        Use traditional image corruption/denoising techniques to evade watermarks.
+
+        Implemented binary search to search for the best possible corruption level.
+
+    """
+    assert evader_cfg is not None, "Must input corruption configs."
+    verbose = evader_cfg["verbose"]
+    detection_threshold = evader_cfg["detection_threshold"]
+
+    watermark_gt_str = watermark_np_to_str(watermark_gt)
+
+    # read images
+    im_orig_uint8_bgr = cv2.imread(im_orig_path)
+    im_w_uint8_bgr = cv2.imread(im_w_path)
+
+    # === Init the corruption evasion ===
+    levels = get_levels(evader_cfg)
+
+    level_log = []
+    bitwise_acc_log = []
+    psnr_w_log = []
+    psnr_clean_log = []
+    recon_interm_log = []  # saves the iterm recon result
+    best_level, best_psnr = -float("inf"), -float("inf")
+
+    for level in levels:
+        evader = get_corrupter(evader_cfg, level)
+        im_recon_bgr = evader.regenerate(im_w_path)
+
+        # === Compute Some Stats ===
+        watermark_recon = watermarker.decode(im_recon_bgr)
+        watermark_recon_str = watermark_np_to_str(watermark_recon)
+        bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
+        # Compute PSNR
+        psnr_recon_w = compute_psnr(
+            im_w_uint8_bgr, im_recon_bgr, data_range=255  # PSNR of recon v.s. watermarked img
+        )
+        psnr_recon_orig = compute_psnr(
+            im_orig_uint8_bgr, im_recon_bgr, data_range=255  # PSNR of recon v.s. orig
+        )
+
+        if verbose:
+            print("**** Corrupted corruption level index - [{:04f}]".format(level))
+            print("  PSNR - <recon v.s im_w> %.02f | <recon v.s clean> %.02f " % (psnr_recon_w, psnr_recon_orig))
+            print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
+            print("Watermarks: ")
+            print("GT:    {}".format(watermark_gt_str))
+            print("Recon: {}".format(watermark_recon_str))
+
+        # === Log Info ===
+        level_log.append(level)
+        bitwise_acc_log.append(bitwise_acc)
+        psnr_w_log.append(psnr_recon_w)
+        psnr_clean_log.append(psnr_recon_orig)
+        recon_interm_log.append(im_recon_bgr)
+        # Update the best recon result
+        if psnr_recon_w > best_psnr and bitwise_acc < detection_threshold:
+            best_level = level
+            best_psnr = psnr_recon_w
+
+    
+    return_log = {
+        "levels": level_log,
+        "psnr_w": psnr_w_log,
+        "psnr_clean": psnr_clean_log,
+        "bitwise_acc": bitwise_acc_log,
+        "interm_recon": recon_interm_log,
+        "best_corrupt_level": best_level,
+        "best_evade_psnr": best_psnr
+    }
+    return return_log
 
 
 if __name__ == "__main__":
