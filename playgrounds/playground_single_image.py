@@ -89,7 +89,7 @@ def main(args):
     evader_cfgs = CONFIGS[args.evade_method]
     # Create log folder 
     vis_root_dir = os.path.join(
-        ".", "Vis_{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format(args.evade_method), "{}".format(evader_cfgs["arch"])
+        ".", "Visualization", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format(args.evade_method), "{}".format(evader_cfgs["arch"])
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
