@@ -118,3 +118,13 @@ def plot_corruption_res(save_root, res_log, detection_threshold=0.75, method_nam
                 save_vis_root, "Level-{}.png".format(level_number)
             )
             save_image_bgr(recon_img, save_path)
+
+
+def plot_diffuser_res(save_root, res_log):
+    save_vis_root = os.path.join(save_root, "Vis-Recon-PerQuality")
+    os.makedirs(save_vis_root, exist_ok=True)
+    save_path = os.path.join(
+        save_vis_root, "Diffuser_regenerated.png"
+    )
+    recon_img = res_log["interm_recon"]
+    save_image_bgr(recon_img, save_path)

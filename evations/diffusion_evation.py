@@ -20,10 +20,15 @@
 # ###########  ############  #############
 
 import torch
+import cv2
 import numpy as np
 from PIL import Image
+from skimage.metrics import peak_signal_noise_ratio as compute_psnr
+from diffusers import ReSDPipeline
 
 from utils.general import rgb2bgr
+from utils.general import uint8_to_float, float_to_uint8, img_np_to_tensor, \
+    tensor_output_to_image_np, watermark_np_to_str, compute_bitwise_acc, rgb2bgr
 
 
 class DiffWMAttacker():
@@ -64,11 +69,68 @@ class DiffWMAttacker():
             image_np = np.array(image)
             img_bgr = rgb2bgr(image_np)
             return img_bgr
-        
+
+
+def diffuser_evation_single_img(
+    im_orig_path, im_w_path, watermarker, watermark_gt, evader_cfg=None    
+):
+    """
+        Use method proposed in paper: https://arxiv.org/pdf/2306.01953.pdf
+
+        to regenerate a image in order to evade the watermark.
+
+    """
+    assert evader_cfg is not None, "Must input corruption configs."
+    verbose = evader_cfg["verbose"]
+    detection_threshold = evader_cfg["detection_threshold"]
+
+    watermark_gt_str = watermark_np_to_str(watermark_gt)
+    # read images
+    im_orig_uint8_bgr = cv2.imread(im_orig_path)
+    im_w_uint8_bgr = cv2.imread(im_w_path)
+
+    # Init diffuser
+    device = torch.device("cuda")
+    pipe = ReSDPipeline.from_pretrained("stabilityai/stable-diffusion-2-1", torch_dtype=torch.float16, revision="fp16")
+    pipe.set_progress_bar_config(disable=True)
+    pipe.to(device)
+    print('Finished loading model')
+    evader = DiffWMAttacker(pipe)
+
+    # Regnerate
+    im_recon_bgr = evader.regenerate(im_w_path)
+
+    # === Compute Some Stats ===
+    watermark_recon = watermarker.decode(im_recon_bgr)
+    watermark_recon_str = watermark_np_to_str(watermark_recon)
+    bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
+    # Compute PSNR
+    psnr_recon_w = compute_psnr(
+        im_w_uint8_bgr, im_recon_bgr, data_range=255  # PSNR of recon v.s. watermarked img
+    )
+    psnr_recon_orig = compute_psnr(
+        im_orig_uint8_bgr, im_recon_bgr, data_range=255  # PSNR of recon v.s. orig
+    )
+
+    if verbose:
+        print("  PSNR - <recon v.s im_w> %.02f | <recon v.s clean> %.02f " % (psnr_recon_w, psnr_recon_orig))
+        print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
+        print("Watermarks: ")
+        print("GT:    {}".format(watermark_gt_str))
+        print("Recon: {}".format(watermark_recon_str))
+    
+    return_log = {
+        "psnr_w": psnr_recon_w,
+        "psnr_clean": psnr_recon_orig,
+        "bitwise_acc": bitwise_acc,
+        "interm_recon": im_recon_bgr,
+    }
+    return return_log
+
 
 if __name__ == "__main__":
     print("Unit Test")
-    import os, cv2
+    import os
     from diffusers import ReSDPipeline
     test_img_path = os.path.join("examples", "ori_imgs", "000000000711.png")
 

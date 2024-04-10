@@ -9,7 +9,8 @@ import numpy as np
 # === Project Import ===
 from watermarkers import get_watermarkers
 from evations import get_evasion_alg
-from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res
+from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res, \
+    plot_diffuser_res
 
 
 def main(args):
@@ -38,6 +39,9 @@ def main(args):
         "watermark_gt": watermark_gt
     }
     watermarker = get_watermarkers(watermarker_configs)
+
+    # ==== Check the decoding here ====
+    # ##### #### #### #### ######
     
     # Generated watermarked image and save it to img_w_path
     watermarker.encode(img_clean_path, img_w_path)
@@ -74,6 +78,12 @@ def main(args):
             "arch": args.arch,
             "detection_threshold": detection_threshold,
             "verbose": True,
+        },
+
+        "diffuser": {
+            "arch": "dummy",
+            "detection_threshold": detection_threshold,
+            "verbose": True,
         }
     }
     evader_cfgs = CONFIGS[args.evade_method]
@@ -99,6 +109,8 @@ def main(args):
     elif args.evade_method.lower() == "corrupters":
         print("Use - {} - post-processing: ".format(evader_cfgs["arch"]))
         plot_corruption_res(vis_root_dir, evasion_res, detection_threshold, method_name=evader_cfgs["arch"])
+    elif args.evade_method.lower() == "diffuser":
+        plot_diffuser_res(vis_root_dir, evasion_res)
     else:
         raise RuntimeError("Un-implemented result summary")
 
@@ -127,7 +139,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="corrupters"
+        default="dip"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, help="Secondary specification of evasion method (if there are other choices).",

@@ -23,8 +23,8 @@ from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 
 from utils.general import uint8_to_float, float_to_uint8, rgb2bgr
 from skimage.util import random_noise
-from utils.general import uint8_to_float, float_to_uint8, img_np_to_tensor, \
-    tensor_output_to_image_np, watermark_np_to_str, compute_bitwise_acc, rgb2bgr
+from utils.general import uint8_to_float, float_to_uint8, \
+    watermark_np_to_str, compute_bitwise_acc, rgb2bgr
 
 
 class GaussianBlurAttacker():
