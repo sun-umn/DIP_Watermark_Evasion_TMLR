@@ -115,7 +115,7 @@ def main(args):
         raise RuntimeError("Un-implemented result summary")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
 
     print("\n***** This is demo of single image evasion ***** \n")
     
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="clean image name.",
-        default="009.png"
+        default="711.png"
     )
     parser.add_argument(
         "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
