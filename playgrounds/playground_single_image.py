@@ -39,12 +39,17 @@ def main(args):
         "watermark_gt": watermark_gt
     }
     watermarker = get_watermarkers(watermarker_configs)
-
-    # ==== Check the decoding here ====
-    # ##### #### #### #### ######
     
     # Generated watermarked image and save it to img_w_path
     watermarker.encode(img_clean_path, img_w_path)
+
+    # ==== Check the decoding here ====
+    watermark_decode = watermarker.decode_from_path(img_w_path)
+    bitwise_acc_0 = np.mean(watermark_decode == watermark_gt)
+    print("** Sanity check for watermarker encoder & decoder:")
+    print("    Bitwise acc. - [{:.04f} %]".format(bitwise_acc_0 * 100))
+    assert bitwise_acc_0 > 0.99, "The encoder & decode fails to work on this watermark string."
+    # ##### #### #### #### ######
 
     # === Get Evasion algorithm ===
     detection_threshold = args.detection_threshold
