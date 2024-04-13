@@ -58,7 +58,7 @@ def wevade_bq(
 def main(args):
     # === Some Dummy Configs ===
     device = torch.device("cuda")
-    # === Get image paths
+    # === Get image paths                          
     img_clean_path = os.path.join(
         args.root_path_im_orig, args.im_name  # Path to a clean image
     )
