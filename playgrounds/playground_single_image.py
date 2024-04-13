@@ -42,8 +42,7 @@ def main(args):
     
     # Generated watermarked image and save it to img_w_path
     watermarker.encode(img_clean_path, img_w_path)
-
-    # ==== Check the decoding here ====
+    # Check decoding in case learning-based encoder/decoder doesn't work properly
     watermark_decode = watermarker.decode_from_path(img_w_path)
     bitwise_acc_0 = np.mean(watermark_decode == watermark_gt)
     print("** Sanity check for watermarker encoder & decoder:")
