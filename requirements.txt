@@ -13,6 +13,6 @@ accelerate
 onnxruntime
 
 # === Used in https://github.com/zhengyuan-jiang/WEvade ===
-
+adversarial-robustness-toolbox
 # === Additional dependencies ===
 seaborn
