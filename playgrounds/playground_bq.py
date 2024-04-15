@@ -1,5 +1,10 @@
 """
-    A test script to get WevadeBQ on.
+    A test script to get WevadeBQ on. Adapted from https://github.com/zhengyuan-jiang/WEvade and make it:
+
+    1) Work on other more powerful encoder/decoder 
+
+    2) obvious that WevadeBQ algo. is very bad as they claimed (because of the did not evaluate on the powerful encoder/decoders but only on the ones they trained themselves).
+ 
 """
 import sys, os
 dir_path = os.path.abspath(".")
@@ -95,7 +100,7 @@ def WEvade_B_Q(watermarked_images, init_adv_images, detector, verbose=True):
     num_images = 1  # For the sake of code unity, fix this to be 1
 
 
-    norm = 2
+    norm = 'inf'
     attack = HopSkipJump(
         classifier=detector, targeted=False, norm=norm, max_iter=0, max_eval=1000, init_eval=5, batch_size=1
     )
