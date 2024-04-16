@@ -11,6 +11,7 @@ from watermarkers import get_watermarkers
 from evations import get_evasion_alg
 from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res, \
     plot_diffuser_res
+from utils.general import watermark_np_to_str
 
 
 def main(args):
@@ -31,7 +32,7 @@ def main(args):
 
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
-    # watermark_gt = np.ones_like(watermark_gt)
+    # watermark_gt = np.zeros_like(watermark_gt)
 
     # === Initiate a encoder & decoder ===
     watermarker_configs = {
@@ -45,8 +46,9 @@ def main(args):
     # Check decoding in case learning-based encoder/decoder doesn't work properly
     watermark_decode = watermarker.decode_from_path(img_w_path)
     bitwise_acc_0 = np.mean(watermark_decode == watermark_gt)
-    print("** Sanity check for watermarker encoder & decoder:")
-    print("    Bitwise acc. - [{:.04f} %]".format(bitwise_acc_0 * 100))
+    print("*Sanity check for watermarker encoder & decoder:")
+    print("  Decoded watermark from im_w: {}".format(watermark_np_to_str(watermark_decode)))
+    print("  Bitwise acc. - [{:.04f} %]".format(bitwise_acc_0 * 100))
     assert bitwise_acc_0 > 0.99, "The encoder & decode fails to work on this watermark string."
     # ##### #### #### #### ######
 

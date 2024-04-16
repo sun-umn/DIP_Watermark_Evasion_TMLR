@@ -14,5 +14,8 @@ onnxruntime
 
 # === Used in https://github.com/zhengyuan-jiang/WEvade ===
 adversarial-robustness-toolbox
+# === To download DiffusionDB dataset ===
+dataset
+
 # === Additional dependencies ===
 seaborn
