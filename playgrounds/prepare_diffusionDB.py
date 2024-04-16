@@ -7,7 +7,9 @@ import os, argparse
 from datasets import load_dataset
 import numpy as np
 from utils.general import rgb2bgr, save_image_bgr
-
+"""
+    Use this script to download and prepare the DiffusionDB images (which has been pulled in examples/DiffusionDB with this repo.)
+"""
 
 def main(args):
 

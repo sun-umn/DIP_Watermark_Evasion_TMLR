@@ -7,7 +7,9 @@ import os, argparse
 import cv2
 import numpy as np
 from utils.general import rgb2bgr, save_image_bgr
-
+"""
+    Use this script to prepare the COCO images (which has been pulled in examples/COCO with this repo.)
+"""
 
 def main(args):
 
