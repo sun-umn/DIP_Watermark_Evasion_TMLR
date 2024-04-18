@@ -41,6 +41,17 @@ def plot_dip_res(save_root, res_log, detection_threshold=0.75):
             )
             save_image_bgr(recon_img, save_path)
 
+    # Vis Component-wise mse
+    fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True)
+    iter_data = res_log["iter_log"]
+    ax.plot(iter_data, res_log["mse_to_orig"], label="MSE to Clean Image")
+    ax.plot(iter_data, res_log["mse_to_watermark"], label="MSE to Watermark")
+    ax.set_xscale('log')
+    ax.legend()
+    save_name = os.path.join(save_root, "MSE_plot.png")
+    plt.savefig(save_name)
+    plt.close(fig)
+
 
 def plot_vae_res(save_root, res_log, detection_threshold=0.75):
     # Plot Quality-PSNR curves and bitwise acc. curves

@@ -13,6 +13,7 @@ def get_model(dig_cfgs):
         dip_model = get_net_dip()
     else:
         raise RuntimeError("Unsupported DIP architecture.")
+    dip_model.train()
     return dip_model
 
 
@@ -38,7 +39,6 @@ def dip_evasion_single_img(
     watermark_gt_str = watermark_np_to_str(watermark_gt)
     # Init A DIP model
     dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
-    dip_model.train()
     show_every = dip_cfgs["show_every"]
     total_iters = dip_cfgs["total_iters"]
     lr = dip_cfgs["lr"]
@@ -59,6 +59,14 @@ def dip_evasion_single_img(
     recon_interm_log = []  # saves the iterm recon result
     best_iter, best_psnr = 0, -float("inf")
 
+    mse_to_orig = []
+    mse_to_watermark = []
+
+    # === To profile the component-wise reconstruction ===
+    im_orig_float_np = im_orig_uint8_bgr.astype(np.float32)
+    im_w_float_np = im_w_uint8_bgr.astype(np.float32)
+    watermark_float_np = im_w_float_np - im_orig_float_np
+
     for num_iter in range(total_iters):
         optimizer.zero_grad()
         net_input = im_w_bgr_tensor
@@ -77,6 +85,13 @@ def dip_evasion_single_img(
             img_recon_np_int = float_to_int(img_recon)
             if save_interms:
                 recon_interm_log.append(img_recon_np_int.astype(np.uint8))
+
+            # Compute component-wise mse (using numpy array in the original scale [0, 255])
+            img_recon_float = img_recon_np_int.astype(np.float32)
+            mse_orig = np.mean((img_recon_float - im_orig_float_np)**2)
+            mse_watermark = np.mean((img_recon_float - watermark_float_np)**2)
+            mse_to_orig.append(mse_orig)
+            mse_to_watermark.append(mse_watermark)
 
             # Compute PSNR
             psnr_recon_w = compute_psnr(
@@ -115,7 +130,9 @@ def dip_evasion_single_img(
         "bitwise_acc": bitwise_acc_log,
         "interm_recon": recon_interm_log,
         "best_evade_iter": best_iter,
-        "best_evade_psnr": best_psnr
+        "best_evade_psnr": best_psnr,
+        "mse_to_orig": mse_to_orig,
+        "mse_to_watermark": mse_to_watermark
     }
     return return_log
 

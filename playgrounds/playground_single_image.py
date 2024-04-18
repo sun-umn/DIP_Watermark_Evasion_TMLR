@@ -61,15 +61,15 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": "vanila",   # Used in DIP to select the variant architecture
-            "show_every": 10,   # Used in DIP to log interm. result
-            "total_iters": 500, # Used in DIP as the max_iter
+            "show_every": 1,   # Used in DIP to log interm. result
+            "total_iters": 1000, # Used in DIP as the max_iter
             "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": device,
             "dtype": torch.float,
             "detection_threshold": detection_threshold,
             "verbose": True,
-            "save_interms": True
+            "save_interms": False
         },
 
         "vae": {
