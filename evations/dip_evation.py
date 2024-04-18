@@ -61,6 +61,7 @@ def dip_evasion_single_img(
 
     mse_to_orig = []
     mse_to_watermark = []
+    psnr_res_w_log = []
 
     # === To profile the component-wise reconstruction ===
     im_orig_float_np = im_orig_uint8_bgr.astype(np.float32)
@@ -89,7 +90,7 @@ def dip_evasion_single_img(
             # Compute component-wise mse (using numpy array in the original scale [0, 255])
             img_recon_float = img_recon_np_int.astype(np.float32)
             mse_orig = np.mean((img_recon_float - im_orig_float_np)**2)
-            mse_watermark = np.mean((img_recon_float - watermark_float_np)**2)
+            mse_watermark = np.mean((img_recon_float - im_orig_float_np - watermark_float_np)**2)
             mse_to_orig.append(mse_orig)
             mse_to_watermark.append(mse_watermark)
 
@@ -100,8 +101,15 @@ def dip_evasion_single_img(
             psnr_recon_orig = compute_psnr(
                 im_orig_uint8_bgr.astype(np.int16), img_recon_np_int, data_range=255  # PSNR of recon v.s. orig
             )
+            im_watermark_int = im_w_uint8_bgr.astype(np.int16) - im_orig_uint8_bgr.astype(np.int16)
+            psnr_res_watermark = compute_psnr(
+                im_watermark_int,  # GT watermark pattern
+                img_recon_np_int - im_orig_uint8_bgr.astype(np.int16),  # Residual
+                data_range=(np.amax(im_watermark_int) - np.amin(im_watermark_int))
+            )
             psnr_w_log.append(psnr_recon_w)
             psnr_clean_log.append(psnr_recon_orig)
+            psnr_res_w_log.append(psnr_res_watermark)
 
             # Decode the recon image and compute the bitwise acc.
             img_recon_bgr_int8 = img_recon_np_int.astype(np.uint8)
@@ -127,6 +135,7 @@ def dip_evasion_single_img(
         "iter_log": iter_log,
         "psnr_w": psnr_w_log,
         "psnr_clean": psnr_clean_log,
+        "psnr_watermark": psnr_res_w_log, 
         "bitwise_acc": bitwise_acc_log,
         "interm_recon": recon_interm_log,
         "best_evade_iter": best_iter,

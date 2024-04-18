@@ -11,12 +11,13 @@ from watermarkers import get_watermarkers
 from evations import get_evasion_alg
 from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res, \
     plot_diffuser_res
-from utils.general import watermark_np_to_str
+from utils.general import watermark_np_to_str, set_random_seeds
 
 
 def main(args):
     # === Some Dummy Configs ===
     device = torch.device("cuda")
+    set_random_seeds(args.random_seed)
 
     img_clean_path = os.path.join(
         args.root_path_im_orig, args.im_name  # Path to a clean image
@@ -61,8 +62,8 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": "vanila",   # Used in DIP to select the variant architecture
-            "show_every": 1,   # Used in DIP to log interm. result
-            "total_iters": 1000, # Used in DIP as the max_iter
+            "show_every": 5,   # Used in DIP to log interm. result
+            "total_iters": 500, # Used in DIP as the max_iter
             "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": device,
@@ -126,6 +127,10 @@ if __name__ == "__main__":
     print("\n***** This is demo of single image evasion ***** \n")
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
+    parser.add_argument(
+        "--random_seed", dest="random_seed", type=int, help="Manually set random seed for reproduction.",
+        default=13
+    )
     parser.add_argument(
         '--root_path_im_orig', type=str, help="Root folder to the clean images.",
         default=os.path.join("examples", "ori_imgs")

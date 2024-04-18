@@ -46,12 +46,28 @@ def plot_dip_res(save_root, res_log, detection_threshold=0.75):
     iter_data = res_log["iter_log"]
     ax.plot(iter_data, res_log["mse_to_orig"], label="MSE to Clean Image")
     ax.plot(iter_data, res_log["mse_to_watermark"], label="MSE to Watermark")
-    ax.set_xscale('log')
+    # ax.set_xscale('log')
     ax.legend()
     save_name = os.path.join(save_root, "MSE_plot.png")
     plt.savefig(save_name)
     plt.close(fig)
 
+    # Vis Component-wise psnr 
+    fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True)
+    ax.plot(iter_data, res_log["psnr_clean"], label="PSNR to Clean Image")
+    ax.plot(iter_data, res_log["psnr_watermark"], label="PSNR to watermark")
+    # ax.set_xscale('log')
+    ax.legend()
+    ax.vlines(
+        x=res_log["best_evade_iter"], 
+        ymin=min(np.amin(res_log["psnr_clean"]), np.amin(res_log["psnr_watermark"])), 
+        ymax=max(np.amax(res_log["psnr_clean"]), np.amax(res_log["psnr_watermark"])),
+        ls="dashed", color="black", label="Best Evasion Iter"
+    )
+    save_name = os.path.join(save_root, "PSNR-Clean-Watermark.png")
+    plt.savefig(save_name)
+    plt.close(fig)
+    
 
 def plot_vae_res(save_root, res_log, detection_threshold=0.75):
     # Plot Quality-PSNR curves and bitwise acc. curves

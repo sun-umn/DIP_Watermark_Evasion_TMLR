@@ -1,9 +1,20 @@
 from PIL import Image
 import torch, cv2
+import random
 import math
 import numpy as np
 from pytorch_msssim import ssim, ms_ssim
 from torchvision import transforms
+
+
+def set_random_seeds(seed):
+    """
+        This function sets all random seed used in this experiment.
+        For reproduce purpose.
+    """
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
 
 def uint8_to_float(img_orig):

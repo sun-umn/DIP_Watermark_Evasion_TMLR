@@ -17,7 +17,7 @@ from evations import get_evasion_alg
 from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res, \
     plot_diffuser_res
 from utils.general import watermark_np_to_str, uint8_to_float, img_np_to_tensor, \
-    float_to_int
+    float_to_int, set_random_seeds
 from model_dip import get_net_dip
 import matplotlib.pyplot as plt
 
@@ -81,7 +81,7 @@ def dip_regress_single_input(
 
             with torch.no_grad():
                 orig_mse = torch.nn.functional.mse_loss(net_output, orig_tensor).item()
-                w_mse = torch.nn.functional.mse_loss(net_output, w_tensor).item()
+                w_mse = torch.nn.functional.mse_loss(net_output-orig_tensor, w_tensor).item()
                 orig_mse_log.append(orig_mse)
                 w_mse_log.append(w_mse)
 
@@ -99,6 +99,8 @@ def dip_regress_single_input(
 def main(args):
     # === Some Dummy Configs ===
     device = torch.device("cuda")
+    set_random_seeds(args.random_seed)
+    
     img_clean_path = os.path.join(
         args.root_path_im_orig, args.im_name  # Path to a clean image
     )
@@ -204,6 +206,10 @@ if __name__ == "__main__":
     print("\n***** This is demo of single image evasion ***** \n")
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
+    parser.add_argument(
+        "--random_seed", dest="random_seed", type=int, help="Manually set random seed for reproduction.",
+        default=42
+    )
     parser.add_argument(
         '--root_path_im_orig', type=str, help="Root folder to the clean images.",
         default=os.path.join("examples", "ori_imgs")
