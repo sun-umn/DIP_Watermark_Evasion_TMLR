@@ -38,8 +38,8 @@ def main(args):
     img_clean_bgr_uint8_np = cv2.imread(img_clean_path)
     img_clean_bgr_float_np = uint8_to_float(img_clean_bgr_uint8_np)
     # === Add Gaussian Noise ===
-    noise_sigma = 0.05
-    # noise_sigma = 0.2
+    # noise_sigma = 0.01
+    noise_sigma = 0.18
     img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='gaussian', var=noise_sigma**2)
     # img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='s&p', amount=noise_sigma)
     # Below add a constant bias
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="clean image name.",
-        default="711.png"
+        default="007.png"
     )
 
     args = parser.parse_args()
