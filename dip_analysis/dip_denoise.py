@@ -38,12 +38,12 @@ def main(args):
     img_clean_bgr_uint8_np = cv2.imread(img_clean_path)
     img_clean_bgr_float_np = uint8_to_float(img_clean_bgr_uint8_np)
     # === Add Gaussian Noise ===
-    # noise_sigma = 0.15
-    noise_sigma = 0.05
-    # img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='gaussian', var=noise_sigma**2)
-    img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='s&p', amount=noise_sigma)
+    noise_sigma = 0.1
+    # noise_sigma = 0.2
+    img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='gaussian', var=noise_sigma**2)
+    # img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='s&p', amount=noise_sigma)
     # Below add a constant bias
-    img_noisy_bgr_float_np = img_noisy_bgr_float_np + 0.1
+    img_noisy_bgr_float_np = img_noisy_bgr_float_np
     img_noisy_bgr_float_np = np.clip(img_noisy_bgr_float_np, 0, 1)
     img_noisy_bgr_uint8_np = float_to_uint8(img_noisy_bgr_float_np)
 
@@ -159,10 +159,10 @@ def main(args):
     fig, ax = plt.subplots(ncols=1, nrows=1)
     ax.plot(iter_data, res["mse_clean"], label="recon v.s clean", alpha=0.5, lw=2)
     # ax.hlines(mse_noisy_img, xmin=0, xmax=np.amax(iter_data), label="Best Recon MSE", ls="dashed")
-    ax.hlines(noise_energy_mean, xmin=0, xmax=np.amax(iter_data), label="Noise Mean Energy (mse)", ls="dashed")
+    ax.hlines(noise_energy_mean, xmin=0, xmax=np.amax(iter_data), label="Noise Mean Energy (mse)", ls="dashed", color="red")
     ax.hlines(noise_var, xmin=0, xmax=np.amax(iter_data), label="Noise Variance", ls="dashed")
     ax.plot(iter_data, res["mse_noisy_img"], label="recon v.s. input (noisy image)", alpha=0.5, lw=2)
-    ax.vlines(idx, ymin=0, ymax=np.amax(res["mse_noisy_img"]), label="Best Recon Iter", ls="dashed")
+    ax.vlines(idx, ymin=0, ymax=np.amax(res["mse_noisy_img"]), label="Best Recon Iter", ls="dashed", color="green")
     ax.set_title("Iter - MSE")
     ax.legend()
     plt.tight_layout()
