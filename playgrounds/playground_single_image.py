@@ -5,6 +5,7 @@ dir_path = os.path.abspath("..")
 sys.path.append(dir_path)
 import math, torch, cv2, argparse
 import numpy as np
+import pickle
 
 # === Project Import ===
 from watermarkers import get_watermarkers
@@ -69,7 +70,7 @@ def main(args):
             "dtype": torch.float,
             "detection_threshold": detection_threshold,
             "verbose": True,
-            "save_interms": False
+            "save_interms": True
         },
 
         "vae": {
@@ -103,11 +104,16 @@ def main(args):
         img_clean_path, img_w_path,  watermarker, watermark_gt, evader_cfgs
     )
 
+    # === Save Result ===
+    result_path = os.path.join(vis_root_dir, "result.pkl")
+    with open(result_path, 'wb') as f:
+        pickle.dump(evasion_res, f, protocol=pickle.HIGHEST_PROTOCOL)
+
     # === Vis result ===
     if args.evade_method.lower() == "dip":
         print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
         print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
-        plot_dip_res(vis_root_dir, evasion_res, detection_threshold)
+        plot_dip_res(vis_root_dir, evasion_res, detection_threshold, vis_recon=False)
     elif args.evade_method.lower() == "vae":
         print("Best evade quality: {}".format(evasion_res["best_evade_quality"]))
         print("Best evade PSNR   : {:.04f}".format(evasion_res["best_evade_psnr"]))
