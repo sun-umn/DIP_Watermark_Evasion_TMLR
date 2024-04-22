@@ -7,20 +7,21 @@ import numpy as np
 from .general import save_image_bgr
 
 
-def plot_dip_res(save_root, res_log, detection_threshold=0.75):
+def plot_dip_res(save_root, res_log, detection_threshold=0.75, vis_recon=False):
     # Plot Iter-PSNR curves and bitwise acc.
-    fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True)
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     iter_data = res_log["iter_log"]
     bw_acc_data = res_log["bitwise_acc"]
     psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
-    ax[0].plot(iter_data, psnr_clean_data, label="PSNR (recon - clean)")
+    ax[0].plot(iter_data, psnr_clean_data, label="PSNR (recon - clean)", color="orange")
+    ax[0].plot(iter_data, psnr_w_data, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
+    ax[0].vlines(res_log["best_evade_iter"], ymin=np.amin(psnr_w_data), ymax=np.amax(psnr_w_data), color="black", ls="dashed", label="Best Recon Iter")
     ax[0].legend()
-    ax[1].plot(iter_data, psnr_w_data, label="PSNR (recon - watermarked)")
+    ax[1].plot(iter_data, bw_acc_data, label="Bitwise Acc.")
+    ax[1].hlines(y=detection_threshold, xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
+    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
+    ax[1].vlines(res_log["best_evade_iter"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
     ax[1].legend()
-    ax[2].plot(iter_data, bw_acc_data, label="Bitwise Acc.")
-    ax[2].hlines(y=detection_threshold, xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
-    ax[2].hlines(y=(1-detection_threshold), xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
-    ax[2].legend()
     plt.tight_layout()
     save_name = os.path.join(save_root, "psnr_bt_acc.png")
     plt.savefig(save_name)
@@ -30,6 +31,8 @@ def plot_dip_res(save_root, res_log, detection_threshold=0.75):
     recon_images = res_log["interm_recon"]
     if len(recon_images) < 1:
         print("Do not have interm. images saved. Pass saving visualization.")
+    elif not vis_recon:
+        print("Opt out to visualize the intermediate reconstructed images.")
     else:
         print("Visualizing Interm. Recon. Images ...")
         save_vis_root = os.path.join(save_root, "Vis-Interm-Recon")
@@ -42,29 +45,21 @@ def plot_dip_res(save_root, res_log, detection_threshold=0.75):
             save_image_bgr(recon_img, save_path)
 
     # Vis Component-wise mse
-    fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True)
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     iter_data = res_log["iter_log"]
-    ax.plot(iter_data, res_log["mse_to_orig"], label="MSE to Clean Image")
-    ax.plot(iter_data, res_log["mse_to_watermark"], label="MSE to Watermark")
-    # ax.set_xscale('log')
-    ax.legend()
+    ax[0].plot(iter_data, res_log["mse_to_orig"], label="MSE (recon - clean)")
+    ax[0].plot(iter_data, res_log["mse_to_watermark"], label="MSE (recon - im_w)")
+    ax[0].hlines(res_log["best_evade_mse"], xmin=0, xmax=np.amax(iter_data), label="Best evade MSE (recon v.s. im_w)", ls="dashed", color="orange")
+    ax[0].hlines(res_log["mse_clean_to_w"], xmin=0, xmax=np.amax(iter_data), label="MSE (clean v.s. im_w)", ls="dashed", color="black")
+    ax[0].vlines(res_log["best_evade_iter"], ymin=0, ymax=np.amax(res_log["mse_to_watermark"]), color="black", ls="dashed", label="Best Recon Iter")
+    ax[0].legend()
+    ax[0].set_yscale('log')
+    ax[1].plot(iter_data, bw_acc_data, label="Bitwise Acc.")
+    ax[1].hlines(y=detection_threshold, xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
+    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(iter_data), xmax=np.amax(iter_data), ls="dashed", color="black")
+    ax[1].vlines(res_log["best_evade_iter"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
+    ax[1].legend()
     save_name = os.path.join(save_root, "MSE_plot.png")
-    plt.savefig(save_name)
-    plt.close(fig)
-
-    # Vis Component-wise psnr 
-    fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True)
-    ax.plot(iter_data, res_log["psnr_clean"], label="PSNR to Clean Image")
-    ax.plot(iter_data, res_log["psnr_watermark"], label="PSNR to watermark")
-    # ax.set_xscale('log')
-    ax.legend()
-    ax.vlines(
-        x=res_log["best_evade_iter"], 
-        ymin=min(np.amin(res_log["psnr_clean"]), np.amin(res_log["psnr_watermark"])), 
-        ymax=max(np.amax(res_log["psnr_clean"]), np.amax(res_log["psnr_watermark"])),
-        ls="dashed", color="black", label="Best Evasion Iter"
-    )
-    save_name = os.path.join(save_root, "PSNR-Clean-Watermark.png")
     plt.savefig(save_name)
     plt.close(fig)
     

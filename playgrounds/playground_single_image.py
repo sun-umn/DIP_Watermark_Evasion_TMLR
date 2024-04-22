@@ -33,7 +33,6 @@ def main(args):
 
     # === Initiate a watermark ==> in ndarray
     watermark_gt = np.random.binomial(1, 0.5, 32)  
-    # watermark_gt = np.zeros_like(watermark_gt)
 
     # === Initiate a encoder & decoder ===
     watermarker_configs = {
@@ -64,7 +63,7 @@ def main(args):
             "arch": "vanila",   # Used in DIP to select the variant architecture
             "show_every": 5,   # Used in DIP to log interm. result
             "total_iters": 500, # Used in DIP as the max_iter
-            "lr": 0.001,         # Used in DIP as the learning rate
+            "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": device,
             "dtype": torch.float,
