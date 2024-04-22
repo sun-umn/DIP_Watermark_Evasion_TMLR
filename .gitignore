@@ -2,6 +2,7 @@
 examples/water*
 Vis*
 test*
+dataset/
 
 # === Standard build files ====
 
