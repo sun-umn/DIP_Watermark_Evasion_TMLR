@@ -38,7 +38,7 @@ def main(args):
     img_clean_bgr_uint8_np = cv2.imread(img_clean_path)
     img_clean_bgr_float_np = uint8_to_float(img_clean_bgr_uint8_np)
     # === Add Gaussian Noise ===
-    noise_sigma = 0.1
+    noise_sigma = 0.05
     # noise_sigma = 0.2
     img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='gaussian', var=noise_sigma**2)
     # img_noisy_bgr_float_np = random_noise(img_clean_bgr_float_np, mode='s&p', amount=noise_sigma)
