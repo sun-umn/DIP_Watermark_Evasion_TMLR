@@ -47,6 +47,7 @@ def binary_literal_to_str(watermark_binary_literal):
         return_str += letter
     return return_str
 
+
 if __name__ == "__main__":
     # ############### DEMO 1 #######################
     # # # === generate gt watermark in np array ===
