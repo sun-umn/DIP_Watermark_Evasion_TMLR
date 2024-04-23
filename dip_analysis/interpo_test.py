@@ -65,7 +65,7 @@ def main(args):
 
     # ==== Create log folder ====
     vis_root_dir = os.path.join(
-        ".", "Vis-Test", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("interpo_linear"), "{}".format("dummy")
+        ".", "Vis-Test-Linear", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("interpo_linear"), "{}".format("dummy")
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
@@ -78,6 +78,7 @@ def main(args):
     # Convert the images to float 
     im_orig_bgr_float = uint8_to_float(im_orig_uint8_bgr)
     im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
+    mse_clean_to_w = np.mean((im_orig_bgr_float-im_w_bgr_float)**2)
     # Generate a random init point
     random_start_float = np.random.random_sample(size=im_w_bgr_float.shape)
     # random_start_float = np.zeros_like(im_w_bgr_float)
@@ -98,8 +99,8 @@ def main(args):
     mse_w_log = []
     psnr_w_log = []
     recon_interm_log = []  # saves the iterm recon result
-    best_ratio, best_psnr, best_mse = 0, -float("inf"), -float("inf")
-    for ratio in ratios:
+    best_idx, best_ratio, best_psnr, best_mse = 0, 0, -float("inf"), -float("inf")
+    for idx, ratio in enumerate(ratios):
         im_interm_float = np.clip((1-ratio) * random_start_float + ratio * im_w_bgr_float, 0, 1)
         im_interm_uint8 = float_to_uint8(im_interm_float)
         
@@ -132,6 +133,7 @@ def main(args):
 
         # Update the best recon result
         if psnr_w > best_psnr and bitwise_acc < detection_threshold:
+            best_idx = idx
             best_ratio = ratio
             best_psnr = psnr_clean
             best_mse = mse_clean
@@ -143,8 +145,63 @@ def main(args):
 
     print("==== Best ====")
     print(best_ratio, best_mse, best_psnr)
+    res_log = {
+        "ratios": ratio_log, 
+        "mse_to_orig": mse_clean_log,
+        "mse_to_watermark": mse_w_log,
+        "psnr_clean": psnr_clean_log,
+        "psnr_w": psnr_w_log,
+        "bitwise_acc": bitwise_acc_log,
+        "interm_recon": recon_interm_log,
+        "best_evade_ratio": best_ratio,
+        "best_evade_mse": best_mse,
+        "best_evade_psnr": best_psnr
+    }
 
 
+    # ==== Vis Result ===
+    # Plot Iter-PSNR curves and bitwise acc.
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ratio_data = res_log["ratios"]
+    bw_acc_data = res_log["bitwise_acc"]
+    psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
+    ax[0].plot(ratio_data, psnr_clean_data, label="PSNR (recon - clean)", color="orange")
+    ax[0].plot(ratio_data, psnr_w_data, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
+    ax[0].vlines(res_log["best_evade_ratio"], ymin=np.amin(psnr_w_data), ymax=np.amax(psnr_w_data), color="black", ls="dashed", label="Best Recon Iter")
+    ax[0].legend()
+    ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
+    ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    ax[1].vlines(res_log["best_evade_ratio"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
+    ax[1].legend()
+    plt.tight_layout()
+    save_name = os.path.join(vis_root_dir, "psnr_bt_acc.png")
+    plt.savefig(save_name)
+    plt.close(fig)
+
+    # Vis iter-mse
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ax[0].plot(ratio_data, res_log["mse_to_orig"], label="MSE (recon - clean)")
+    ax[0].plot(ratio_data, res_log["mse_to_watermark"], label="MSE (recon - im_w)")
+    ax[0].hlines(res_log["best_evade_mse"], xmin=0, xmax=np.amax(ratio_data), label="Best evade MSE (recon v.s. im_w)", ls="dashed", color="orange")
+    ax[0].hlines(mse_clean_to_w, xmin=0, xmax=np.amax(ratio_data), label="MSE (clean v.s. im_w)", ls="dashed", color="black")
+    ax[0].vlines(res_log["best_evade_ratio"], ymin=0, ymax=np.amax(res_log["mse_to_watermark"]), color="black", ls="dashed", label="Best Recon Iter")
+    ax[0].legend()
+    ax[0].set_yscale('log')
+    ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
+    ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    ax[1].vlines(res_log["best_evade_ratio"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
+    ax[1].legend()
+    save_name = os.path.join(vis_root_dir, "MSE_plot.png")
+    plt.savefig(save_name)
+    plt.close(fig)
+
+    # Vis best evade recon image
+    best_recon_image = res_log["interm_recon"][best_idx]
+    best_ratio = res_log["best_evade_ratio"]
+    print("Sanity check best ratio", best_ratio)
+    save_name = os.path.join(vis_root_dir)
 
 
 if __name__ == "__main__": 
