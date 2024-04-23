@@ -17,83 +17,9 @@ from evations import get_evasion_alg
 from utils.plottings import plot_dip_res, plot_vae_res, plot_corruption_res, \
     plot_diffuser_res
 from utils.general import watermark_np_to_str, uint8_to_float, img_np_to_tensor, \
-    float_to_int, set_random_seeds
+    float_to_int, set_random_seeds, float_to_uint8,save_image_bgr, compute_bitwise_acc
 from model_dip import get_net_dip
 import matplotlib.pyplot as plt
-
-
-def get_model(dig_cfgs):
-    if dig_cfgs["arch"] == "vanila":
-        dip_model = get_net_dip()
-    else:
-        raise RuntimeError("Unsupported DIP architecture.")
-    dip_model.train()
-    return dip_model
-
-
-
-def dip_regress_single_input(
-    cfg, input_tensor, clip_min=0, clip_max=1,
-    im_orig_tensor=None, w_tensor=None
-):
-    # Load Setups
-    device = cfg["device"]
-    dtype = cfg["dtype"]
-    detection_threshold = cfg['detection_threshold']
-    total_iters = cfg["total_iters"]
-    lr = cfg["lr"]
-    show_every = cfg["show_every"]
-    verbose = cfg["verbose"]
-
-    # === Regress im_w and trace the error from im_clean and noise ===
-    dip_model  = get_model(cfg).to(device, dtype=dtype)
-    params = dip_model.parameters()
-    optimizer = torch.optim.Adam(params, lr=lr)
-    loss_func = torch.nn.MSELoss()
-    iter_log = []
-    mse_log = []
-    orig_mse_log = []
-    w_mse_log = []
-
-    net_input = input_tensor.to(device)
-    orig_tensor = im_orig_tensor.to(device)
-    w_tensor = w_tensor.to(device)
-
-    for num_iter in range(total_iters):
-        optimizer.zero_grad()
-        net_output = dip_model(net_input)
-
-        # Compute Loss and Update 
-        total_loss = loss_func(net_output, net_input)
-        total_loss.backward()
-        optimizer.step()
-        
-        # Log Interm Result
-        if num_iter % show_every == 0:
-            iter_log.append(num_iter)
-
-            img_recon = np.transpose(torch.clamp(net_output.detach().cpu(), clip_min, clip_max).numpy()[0, :, :, :], [1, 2, 0])
-            img_recon_np_int = float_to_int(img_recon)
-            # recon_interm_log.append(img_recon_np_int.astype(np.uint8))
-
-            # record training error
-            mse_log.append(total_loss.item())
-
-            with torch.no_grad():
-                orig_mse = torch.nn.functional.mse_loss(net_output, orig_tensor).item()
-                w_mse = torch.nn.functional.mse_loss(net_output-orig_tensor, w_tensor).item()
-                orig_mse_log.append(orig_mse)
-                w_mse_log.append(w_mse)
-
-            if verbose:
-                print("===== Iter [%d] - Loss [%.06f] =====" % (num_iter, total_loss.item()))
-    res_log = {
-        "iter_log": iter_log,
-        "mse_log": mse_log,
-        "orig_mse": orig_mse_log,
-        "w_mse": w_mse_log
-    }
-    return res_log
 
 
 def main(args):
@@ -136,22 +62,10 @@ def main(args):
     # Read configs and execude evasions
     detection_threshold = args.detection_threshold
     print("Setting detection threshold [{:02f}] for the watermark detector.".format(detection_threshold))
-    CONFIGS = {
-        "arch": "vanila",   # Used in DIP to select the variant architecture
-        "show_every": 1,   # Used in DIP to log interm. result
-        "total_iters": 500, # Used in DIP as the max_iter
-        "lr": 0.01,         # Used in DIP as the learning rate
-
-        "device": device,
-        "dtype": torch.float,
-        "detection_threshold": detection_threshold,
-        "verbose": True,
-        "save_interms": True
-    }
 
     # ==== Create log folder ====
     vis_root_dir = os.path.join(
-        ".", "Vis-Explore", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("dip"), "{}".format(CONFIGS["arch"])
+        ".", "Vis-Test", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("interpo_linear"), "{}".format("dummy")
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
@@ -161,43 +75,75 @@ def main(args):
     im_residual_int_bgr = im_w_uint8_bgr.astype(np.int16) - im_orig_uint8_bgr.astype(np.int16)
     print("Sanity check for residual calculation: ", np.amin(im_residual_int_bgr), np.amax(im_residual_int_bgr))
     
-    # im_res_bgr_float = uint8_to_float(im_residual_int_bgr)
-    # im_res_bgr_tensor = img_np_to_tensor(im_res_bgr_float)
-    
-    # # Regress clean img
+    # Convert the images to float 
     im_orig_bgr_float = uint8_to_float(im_orig_uint8_bgr)
-    im_orig_bgr_tensor = img_np_to_tensor(im_orig_bgr_float)
-    w_bgr_float = uint8_to_float(im_residual_int_bgr)
-    w_bgr_tensor = img_np_to_tensor(w_bgr_float)
-    # res_orig = dip_regress_single_input(
-    #     CONFIGS, im_orig_bgr_tensor, 0, 1
-    # )
-
-    # Regress im_w
     im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
-    im_w_bgr_tensor = img_np_to_tensor(im_w_bgr_float)
-    res_w = dip_regress_single_input(
-        CONFIGS, im_w_bgr_tensor, 0, 1,
-        im_orig_bgr_tensor, w_bgr_tensor
-    )
+    # Generate a random init point
+    random_start_float = np.random.random_sample(size=im_w_bgr_float.shape)
+    # random_start_float = np.zeros_like(im_w_bgr_float)
+    print(im_w_bgr_float.shape, random_start_float.shape)
+    
+    # === Vis random start for sanity check ===
+    random_start_uint8 = float_to_uint8(random_start_float)
+    save_name = os.path.join(vis_root_dir, "image_random_init.png")
+    save_image_bgr(random_start_uint8, save_name)
 
-    # # Regress w
-    # w_bgr_float = uint8_to_float(im_residual_int_bgr)
-    # w_bgr_tensor = img_np_to_tensor(w_bgr_float)
-    # res_w_mark = dip_regress_single_input(
-    #     CONFIGS, w_bgr_tensor, 0, 1
-    # )
+    # === Generate search candidates ===
+    ratios = np.arange(100) * 0.01
+    # Check the interpo. result
+    ratio_log = []
+    bitwise_acc_log = []
+    mse_clean_log = []
+    psnr_clean_log = []
+    mse_w_log = []
+    psnr_w_log = []
+    recon_interm_log = []  # saves the iterm recon result
+    best_ratio, best_psnr, best_mse = 0, -float("inf"), -float("inf")
+    for ratio in ratios:
+        im_interm_float = np.clip((1-ratio) * random_start_float + ratio * im_w_bgr_float, 0, 1)
+        im_interm_uint8 = float_to_uint8(im_interm_float)
+        
+        ratio_log.append(ratio)
+        recon_interm_log.append(im_interm_uint8)
 
-    # == Plot res ==
-    fig, ax = plt.subplots(ncols=1, nrows=1)
-    l1 = ax.plot(res_w["iter_log"], res_w["orig_mse"], label="Clean Img MSE")
-    l2 = ax.plot(res_w["iter_log"], res_w["w_mse"], label="Watermark MSE")
-    # l3 = ax.plot(res_w_mark["iter_log"], res_w_mark["mse_log"], label="Watermark Only")
-    ax.set_xscale('log')
-    ax.legend()
-    save_name = os.path.join(vis_root_dir, "MSE_plot.png")
-    plt.savefig(save_name)
-    plt.close(fig)
+        # Calc Quality
+        mse_clean = np.mean((im_orig_bgr_float - im_interm_float)**2)
+        psnr_clean = compute_psnr(
+            im_orig_uint8_bgr.astype(np.int16),
+            im_interm_uint8.astype(np.int16),
+            data_range=255
+        )
+        mse_w = np.mean((im_w_bgr_float - im_interm_float)**2)
+        psnr_w = compute_psnr(
+            im_w_uint8_bgr.astype(np.int16),
+            im_interm_uint8.astype(np.int16),
+            data_range=255
+        )
+        mse_clean_log.append(mse_clean)
+        psnr_clean_log.append(psnr_clean)
+        mse_w_log.append(mse_w)
+        psnr_w_log.append(psnr_w)
+
+        # Calc decoded string
+        watermark_recon = watermarker.decode(im_interm_uint8)
+        watermark_recon_str = watermark_np_to_str(watermark_recon)
+        bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
+        bitwise_acc_log.append(bitwise_acc)
+
+        # Update the best recon result
+        if psnr_w > best_psnr and bitwise_acc < detection_threshold:
+            best_ratio = ratio
+            best_psnr = psnr_clean
+            best_mse = mse_clean
+
+        print("===== Ratio [{:02f}] =====".format(ratio))
+        print("  PSNR-w -  {:.04f} | PSNR-clean - {:.04f}".format(psnr_w, psnr_clean))
+        print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
+        print("Watermarks: ")
+
+    print("==== Best ====")
+    print(best_ratio, best_mse, best_psnr)
+
 
 
 
