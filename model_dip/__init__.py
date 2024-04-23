@@ -9,6 +9,12 @@ def get_net_dip(input_depth=3, NET_TYPE="skip", pad="reflection", upsample_mode=
                                             num_channels_skip = [skip_n11]*num_scales if isinstance(skip_n11, int) else skip_n11, 
                                             upsample_mode=upsample_mode, downsample_mode=downsample_mode,
                                             need_sigmoid=True, need_bias=True, pad=pad, act_fun=act_fun)
+    # elif NET_TYPE == "random_projector":
+        #### YOUR CODE HERE ####
+        # Make the line below callable and return a random projector model
+
+        # net = RandomProjector() 
+        #### ####################
     else:
         assert False
     # initialize_weights(net)
