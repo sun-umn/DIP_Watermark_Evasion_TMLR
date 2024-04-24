@@ -1,5 +1,9 @@
 """
-    A script tries to explore why DIP can work in this context.
+    A script tries to explore if the direction of the watermark is cleared for good evasion.
+
+    I.e.,  im + w ==> im ==> im - w
+
+    Does the interval [im, im - w] can always the watermarker decoder.
 """
 
 import sys, os
@@ -54,9 +58,13 @@ def main(args):
     # Check decoding in case learning-based encoder/decoder doesn't work properly
     watermark_decode = watermarker.decode_from_path(img_w_path)
     bitwise_acc_0 = np.mean(watermark_decode == watermark_gt)
+    watermark_decode_from_im = watermarker.decode_from_path(img_clean_path)
+    bitwise_acc_clean = np.mean(watermark_decode_from_im == watermark_gt)
     print("*Sanity check for watermarker encoder & decoder:")
+    print("  Decoded watermark from im_clean: {}".format(watermark_np_to_str(watermark_decode_from_im)))
+    print("    Bitwise acc. - [{:.04f} %]".format(bitwise_acc_clean * 100))
     print("  Decoded watermark from im_w: {}".format(watermark_np_to_str(watermark_decode)))
-    print("  Bitwise acc. - [{:.04f} %]".format(bitwise_acc_0 * 100))
+    print("    Bitwise acc. - [{:.04f} %]".format(bitwise_acc_0 * 100))
     assert bitwise_acc_0 > 0.99, "The encoder & decode fails to work on this watermark string."
     
     # Read configs and execude evasions
@@ -65,7 +73,7 @@ def main(args):
 
     # ==== Create log folder ====
     vis_root_dir = os.path.join(
-        ".", "Vis-Test-Linear", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("interpo_linear"), "{}".format("dummy")
+        ".", "Vis-Test-Linear", "{}".format(args.im_name.split(".")[0]), "{}".format(args.watermarker), "{}".format("search_along_watermark_direction"), "{}".format("dummy")
     )
     os.makedirs(vis_root_dir, exist_ok=True)
 
@@ -78,19 +86,10 @@ def main(args):
     # Convert the images to float 
     im_orig_bgr_float = uint8_to_float(im_orig_uint8_bgr)
     im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
-    mse_clean_to_w = np.mean((im_orig_bgr_float-im_w_bgr_float)**2)
-    # Generate a random init point
-    random_start_float = np.random.random_sample(size=im_w_bgr_float.shape)
-    # random_start_float = np.zeros_like(im_w_bgr_float)
-    print(im_w_bgr_float.shape, random_start_float.shape)
-    
-    # === Vis random start for sanity check ===
-    random_start_uint8 = float_to_uint8(random_start_float)
-    save_name = os.path.join(vis_root_dir, "image_random_init.png")
-    save_image_bgr(random_start_uint8, save_name)
+    im_res_bgr_float = uint8_to_float(im_residual_int_bgr)    
 
     # === Generate search candidates ===
-    ratios = np.arange(100) * 0.01
+    ratios = [0.25, 0.5, 0.75] + list(np.arange(5, 20) * 0.25) + list(np.arange(5, 20, 1))
     # Check the interpo. result
     ratio_log = []
     bitwise_acc_log = []
@@ -99,9 +98,9 @@ def main(args):
     mse_w_log = []
     psnr_w_log = []
     recon_interm_log = []  # saves the iterm recon result
-    best_idx, best_ratio, best_psnr, best_mse = 0, 0, -float("inf"), -float("inf")
+
     for idx, ratio in enumerate(ratios):
-        im_interm_float = np.clip((1-ratio) * random_start_float + ratio * im_w_bgr_float, 0, 1)
+        im_interm_float = np.clip(im_w_bgr_float - ratio * im_res_bgr_float, 0, 1)
         im_interm_uint8 = float_to_uint8(im_interm_float)
         
         ratio_log.append(ratio)
@@ -131,20 +130,10 @@ def main(args):
         bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
         bitwise_acc_log.append(bitwise_acc)
 
-        # Update the best recon result
-        if psnr_w > best_psnr and bitwise_acc < detection_threshold:
-            best_idx = idx
-            best_ratio = ratio
-            best_psnr = psnr_clean
-            best_mse = mse_clean
-
         print("===== Ratio [{:02f}] =====".format(ratio))
         print("  PSNR-w -  {:.04f} | PSNR-clean - {:.04f}".format(psnr_w, psnr_clean))
         print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
-        print("Watermarks: ")
 
-    print("==== Best ====")
-    print(best_ratio, best_mse, best_psnr)
     res_log = {
         "ratios": ratio_log, 
         "mse_to_orig": mse_clean_log,
@@ -153,11 +142,7 @@ def main(args):
         "psnr_w": psnr_w_log,
         "bitwise_acc": bitwise_acc_log,
         "interm_recon": recon_interm_log,
-        "best_evade_ratio": best_ratio,
-        "best_evade_mse": best_mse,
-        "best_evade_psnr": best_psnr
     }
-
 
     # ==== Vis Result ===
     # Plot Iter-PSNR curves and bitwise acc.
@@ -167,13 +152,12 @@ def main(args):
     psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
     ax[0].plot(ratio_data, psnr_clean_data, label="PSNR (recon - clean)", color="orange")
     ax[0].plot(ratio_data, psnr_w_data, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
-    ax[0].vlines(res_log["best_evade_ratio"], ymin=np.amin(psnr_w_data), ymax=np.amax(psnr_w_data), color="black", ls="dashed", label="Best Recon Iter")
     ax[0].legend()
     ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
     ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
     ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].vlines(res_log["best_evade_ratio"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
     ax[1].legend()
+    ax[1].set_xlabel(r"$\alpha$")
     plt.tight_layout()
     save_name = os.path.join(vis_root_dir, "psnr_bt_acc.png")
     plt.savefig(save_name)
@@ -183,30 +167,32 @@ def main(args):
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     ax[0].plot(ratio_data, res_log["mse_to_orig"], label="MSE (recon - clean)")
     ax[0].plot(ratio_data, res_log["mse_to_watermark"], label="MSE (recon - im_w)")
-    ax[0].hlines(res_log["best_evade_mse"], xmin=0, xmax=np.amax(ratio_data), label="Best evade MSE (recon v.s. im_w)", ls="dashed", color="orange")
-    ax[0].hlines(mse_clean_to_w, xmin=0, xmax=np.amax(ratio_data), label="MSE (clean v.s. im_w)", ls="dashed", color="black")
-    ax[0].vlines(res_log["best_evade_ratio"], ymin=0, ymax=np.amax(res_log["mse_to_watermark"]), color="black", ls="dashed", label="Best Recon Iter")
     ax[0].legend()
     ax[0].set_yscale('log')
     ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
     ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
     ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].vlines(res_log["best_evade_ratio"], ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
     ax[1].legend()
+    ax[1].set_xlabel(r"$\alpha$")
     save_name = os.path.join(vis_root_dir, "MSE_plot.png")
     plt.savefig(save_name)
     plt.close(fig)
 
-    # Vis best evade recon image
-    best_recon_image = res_log["interm_recon"][best_idx]
-    best_ratio = res_log["best_evade_ratio"]
-    print("Sanity check best ratio", best_ratio)
-    save_name = os.path.join(vis_root_dir)
+    # === Vis some Recon ===
+    idx = 15
+    interm_recon = res_log["interm_recon"][idx]
+    print("Visualize a recon with ")
+    print("   Ratio: {}".format(res_log["ratios"][idx]))
+    print("   PSNR:  {}".format(res_log["psnr_clean"][idx]))
+    print("   Bitwise acc. {} %".format(res_log["bitwise_acc"][idx]*100))
+    save_name = os.path.join(vis_root_dir, "interm_recon.png")
+    save_image_bgr(interm_recon, save_name)
+
 
 
 if __name__ == "__main__": 
 
-    print("\n***** This is demo of single image evasion ***** \n")
+    print("\n***** Investigate if the direction from im_w to im is good for watermark evasion ***** \n")
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
