@@ -26,6 +26,28 @@ from model_dip import get_net_dip
 import matplotlib.pyplot as plt
 
 
+def calculate_2dft(input):
+    ft = np.fft.ifftshift(input)
+    ft = np.fft.fft2(ft)
+    return np.fft.fftshift(ft)
+
+
+def calculate_2dift(input):
+    ift = np.fft.ifftshift(input)
+    ift = np.fft.ifft2(ift)
+    ift = np.fft.fftshift(ift)
+    return ift.real
+
+
+def calc_fft_three_channel(image):
+    fft_list = []
+    for axis in range(3):
+        array = image[:, :, axis]
+        fourier = calculate_2dft(array)
+        fft_list.append(fourier)
+    return np.asarray(fft_list)
+
+
 def main(args):
     # === Some Dummy Configs ===
     device = torch.device("cuda")
@@ -88,105 +110,157 @@ def main(args):
     im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
     im_res_bgr_float = uint8_to_float(im_residual_int_bgr)    
 
-    # === Generate search candidates ===
-    ratios = [0.25, 0.5, 0.75] + list(np.arange(5, 20) * 0.25) + list(np.arange(5, 20, 1))
-    # Check the interpo. result
-    ratio_log = []
-    bitwise_acc_log = []
-    mse_clean_log = []
-    psnr_clean_log = []
-    mse_w_log = []
-    psnr_w_log = []
-    recon_interm_log = []  # saves the iterm recon result
 
-    for idx, ratio in enumerate(ratios):
-        im_interm_float = np.clip(im_w_bgr_float - ratio * im_res_bgr_float, 0, 1)
-        im_interm_uint8 = float_to_uint8(im_interm_float)
-        
-        ratio_log.append(ratio)
-        recon_interm_log.append(im_interm_uint8)
+    # ==== Check 2d fourier spectrum ====
+    # Perform fft2 
+    fft_res = calc_fft_three_channel(im_res_bgr_float)
 
-        # Calc Quality
-        mse_clean = np.mean((im_orig_bgr_float - im_interm_float)**2)
-        psnr_clean = compute_psnr(
-            im_orig_uint8_bgr.astype(np.int16),
-            im_interm_uint8.astype(np.int16),
-            data_range=255
-        )
-        mse_w = np.mean((im_w_bgr_float - im_interm_float)**2)
-        psnr_w = compute_psnr(
-            im_w_uint8_bgr.astype(np.int16),
-            im_interm_uint8.astype(np.int16),
-            data_range=255
-        )
-        mse_clean_log.append(mse_clean)
-        psnr_clean_log.append(psnr_clean)
-        mse_w_log.append(mse_w)
-        psnr_w_log.append(psnr_w)
-
-        # Calc decoded string
-        watermark_recon = watermarker.decode(im_interm_uint8)
-        watermark_recon_str = watermark_np_to_str(watermark_recon)
-        bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
-        bitwise_acc_log.append(bitwise_acc)
-
-        print("===== Ratio [{:02f}] =====".format(ratio))
-        print("  PSNR-w -  {:.04f} | PSNR-clean - {:.04f}".format(psnr_w, psnr_clean))
-        print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
-
-    res_log = {
-        "ratios": ratio_log, 
-        "mse_to_orig": mse_clean_log,
-        "mse_to_watermark": mse_w_log,
-        "psnr_clean": psnr_clean_log,
-        "psnr_w": psnr_w_log,
-        "bitwise_acc": bitwise_acc_log,
-        "interm_recon": recon_interm_log,
-    }
-
-    # ==== Vis Result ===
-    # Plot Iter-PSNR curves and bitwise acc.
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
-    ratio_data = res_log["ratios"]
-    bw_acc_data = res_log["bitwise_acc"]
-    psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
-    ax[0].plot(ratio_data, psnr_clean_data, label="PSNR (recon - clean)", color="orange")
-    ax[0].plot(ratio_data, psnr_w_data, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
-    ax[0].legend()
-    ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
-    ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].legend()
-    ax[1].set_xlabel(r"$\alpha$")
+    # Visualize magnitude and phase plot
+    figure, ax = plt.subplots(nrows=3, ncols=2)
+    for idx in range(3):
+        fourier = fft_res[idx]
+        magnitude = np.absolute(fourier)
+        log_magnitude = np.log(magnitude)
+        phase = np.angle(fourier)
+        # ax[idx, 0].imshow(magnitude)
+        ax[idx, 0].imshow(log_magnitude/np.amax(log_magnitude))
+        ax[idx, 1].imshow((phase - np.amin(phase))/(np.amax(phase) - np.amin(phase)))
+    save_name = os.path.join(vis_root_dir, "fourier_res.png")
     plt.tight_layout()
-    save_name = os.path.join(vis_root_dir, "psnr_bt_acc.png")
     plt.savefig(save_name)
-    plt.close(fig)
+    plt.close(figure)
 
-    # Vis iter-mse
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
-    ax[0].plot(ratio_data, res_log["mse_to_orig"], label="MSE (recon - clean)")
-    ax[0].plot(ratio_data, res_log["mse_to_watermark"], label="MSE (recon - im_w)")
-    ax[0].legend()
-    ax[0].set_yscale('log')
-    ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
-    ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
-    ax[1].legend()
-    ax[1].set_xlabel(r"$\alpha$")
-    save_name = os.path.join(vis_root_dir, "MSE_plot.png")
+    random_noise = np.random.random_sample(im_res_bgr_float.shape)
+    fft_noise = calc_fft_three_channel(random_noise)
+    figure, ax = plt.subplots(nrows=3, ncols=2)
+    for idx in range(3):
+        fourier = fft_noise[idx]
+        magnitude = np.absolute(fourier)
+        log_magnitude = np.log(magnitude)
+        phase = np.angle(fourier)
+        # ax[idx, 0].imshow(magnitude)
+        ax[idx, 0].imshow(log_magnitude/np.amax(log_magnitude))
+        ax[idx, 1].imshow((phase - np.amin(phase))/(np.amax(phase) - np.amin(phase)))
+    save_name = os.path.join(vis_root_dir, "fourier_noise.png")
+    plt.tight_layout()
     plt.savefig(save_name)
-    plt.close(fig)
+    plt.close(figure)
 
-    # === Vis some Recon ===
-    idx = 15
-    interm_recon = res_log["interm_recon"][idx]
-    print("Visualize a recon with ")
-    print("   Ratio: {}".format(res_log["ratios"][idx]))
-    print("   PSNR:  {}".format(res_log["psnr_clean"][idx]))
-    print("   Bitwise acc. {} %".format(res_log["bitwise_acc"][idx]*100))
-    save_name = os.path.join(vis_root_dir, "interm_recon.png")
-    save_image_bgr(interm_recon, save_name)
+
+    fft_im = calc_fft_three_channel(im_orig_bgr_float)
+    figure, ax = plt.subplots(nrows=3, ncols=2)
+    for idx in range(3):
+        fourier = fft_im[idx]
+        magnitude = np.absolute(fourier)
+        log_magnitude = np.log(magnitude)
+        phase = np.angle(fourier)
+        # ax[idx, 0].imshow(magnitude)
+        ax[idx, 0].imshow(log_magnitude/np.amax(log_magnitude))
+        ax[idx, 1].imshow((phase - np.amin(phase))/(np.amax(phase) - np.amin(phase)))
+    save_name = os.path.join(vis_root_dir, "fourier_orig.png")
+    plt.tight_layout()
+    plt.savefig(save_name)
+    plt.close(figure)
+
+    # === Generate search candidates ===
+    # ratios = [0.25, 0.5, 0.75] + list(np.arange(5, 20) * 0.25) + list(np.arange(5, 20, 1))
+    # # Check the interpo. result
+    # ratio_log = []
+    # bitwise_acc_log = []
+    # mse_clean_log = []
+    # psnr_clean_log = []
+    # mse_w_log = []
+    # psnr_w_log = []
+    # recon_interm_log = []  # saves the iterm recon result
+
+    # for idx, ratio in enumerate(ratios):
+    #     im_interm_float = np.clip(im_w_bgr_float - ratio * im_res_bgr_float, 0, 1)
+    #     im_interm_uint8 = float_to_uint8(im_interm_float)
+        
+    #     ratio_log.append(ratio)
+    #     recon_interm_log.append(im_interm_uint8)
+
+    #     # Calc Quality
+    #     mse_clean = np.mean((im_orig_bgr_float - im_interm_float)**2)
+    #     psnr_clean = compute_psnr(
+    #         im_orig_uint8_bgr.astype(np.int16),
+    #         im_interm_uint8.astype(np.int16),
+    #         data_range=255
+    #     )
+    #     mse_w = np.mean((im_w_bgr_float - im_interm_float)**2)
+    #     psnr_w = compute_psnr(
+    #         im_w_uint8_bgr.astype(np.int16),
+    #         im_interm_uint8.astype(np.int16),
+    #         data_range=255
+    #     )
+    #     mse_clean_log.append(mse_clean)
+    #     psnr_clean_log.append(psnr_clean)
+    #     mse_w_log.append(mse_w)
+    #     psnr_w_log.append(psnr_w)
+
+    #     # Calc decoded string
+    #     watermark_recon = watermarker.decode(im_interm_uint8)
+    #     watermark_recon_str = watermark_np_to_str(watermark_recon)
+    #     bitwise_acc = compute_bitwise_acc(watermark_gt, watermark_recon)
+    #     bitwise_acc_log.append(bitwise_acc)
+
+    #     print("===== Ratio [{:02f}] =====".format(ratio))
+    #     print("  PSNR-w -  {:.04f} | PSNR-clean - {:.04f}".format(psnr_w, psnr_clean))
+    #     print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
+
+    # res_log = {
+    #     "ratios": ratio_log, 
+    #     "mse_to_orig": mse_clean_log,
+    #     "mse_to_watermark": mse_w_log,
+    #     "psnr_clean": psnr_clean_log,
+    #     "psnr_w": psnr_w_log,
+    #     "bitwise_acc": bitwise_acc_log,
+    #     "interm_recon": recon_interm_log,
+    # }
+
+    # # ==== Vis Result ===
+    # # Plot Iter-PSNR curves and bitwise acc.
+    # fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    # ratio_data = res_log["ratios"]
+    # bw_acc_data = res_log["bitwise_acc"]
+    # psnr_w_data, psnr_clean_data = res_log["psnr_w"], res_log["psnr_clean"]
+    # ax[0].plot(ratio_data, psnr_clean_data, label="PSNR (recon - clean)", color="orange")
+    # ax[0].plot(ratio_data, psnr_w_data, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
+    # ax[0].legend()
+    # ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
+    # ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    # ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    # ax[1].legend()
+    # ax[1].set_xlabel(r"$\alpha$")
+    # plt.tight_layout()
+    # save_name = os.path.join(vis_root_dir, "psnr_bt_acc.png")
+    # plt.savefig(save_name)
+    # plt.close(fig)
+
+    # # Vis iter-mse
+    # fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    # ax[0].plot(ratio_data, res_log["mse_to_orig"], label="MSE (recon - clean)")
+    # ax[0].plot(ratio_data, res_log["mse_to_watermark"], label="MSE (recon - im_w)")
+    # ax[0].legend()
+    # ax[0].set_yscale('log')
+    # ax[1].plot(ratio_data, bw_acc_data, label="Bitwise Acc.")
+    # ax[1].hlines(y=detection_threshold, xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    # ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(ratio_data), xmax=np.amax(ratio_data), ls="dashed", color="black")
+    # ax[1].legend()
+    # ax[1].set_xlabel(r"$\alpha$")
+    # save_name = os.path.join(vis_root_dir, "MSE_plot.png")
+    # plt.savefig(save_name)
+    # plt.close(fig)
+
+    # # === Vis some Recon ===
+    # idx = 15
+    # interm_recon = res_log["interm_recon"][idx]
+    # print("Visualize a recon with ")
+    # print("   Ratio: {}".format(res_log["ratios"][idx]))
+    # print("   PSNR:  {}".format(res_log["psnr_clean"][idx]))
+    # print("   Bitwise acc. {} %".format(res_log["bitwise_acc"][idx]*100))
+    # save_name = os.path.join(vis_root_dir, "interm_recon.png")
+    # save_image_bgr(interm_recon, save_name)
 
 
 
