@@ -2,7 +2,8 @@
 examples/water*
 Vis*
 test*
-dataset/
+dataset/examples/COCO
+dataset/examples/DiffusionDB
 
 # === Standard build files ====
 
