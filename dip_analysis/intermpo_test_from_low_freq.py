@@ -162,24 +162,11 @@ def main(args):
     save_image_bgr(recon_img_bgr_uint8, save_name)
 
     # Get a low-freq recon init point
-    h = 30
     height, _ = fft_im[0].shape
-    low = math.floor(height // 2 - h)
-    high = math.ceil(height // 2 + h) 
-    fft_im_low = []
-    for idx in range(3):
-        fft = fft_im[idx]
-        array = np.zeros_like(fft)
-        array[low:high, low:high] = fft[low:high, low:high]
-        fft_im_low.append(array)
-    recon_img_low_freq_float = np.clip(calc_ifft_three_channel(fft_im_low), 0, 1)
-    recon_img_low_freq_bgr_uint8 = float_to_uint8(recon_img_low_freq_float)
-    save_name = os.path.join(vis_root_dir, "img_ifft_recon_low_freq.png")
-    save_image_bgr(recon_img_low_freq_bgr_uint8, save_name)
-
-
+    h_0 = height // 2
+    
     # === Generate search candidates ===
-    ratios = list(np.arange(1, 100, 1) * 0.01)
+    ratios = list(np.arange(1, 30, 1) * 0.01)
     # Check the interpo. result
     ratio_log = []
     bitwise_acc_log = []
@@ -190,7 +177,21 @@ def main(args):
     recon_interm_log = []  # saves the iterm recon result
 
     for idx, ratio in enumerate(ratios):
-        im_interm_float = np.clip((1-ratio) * im_w_bgr_float - ratio * recon_img_low_freq_float, 0, 1)
+        h = ratio * h_0
+        low = math.floor(height // 2 - h)
+        high = math.ceil(height // 2 + h) 
+        fft_im_low = []
+        for idx in range(3):
+            fft = fft_im[idx]
+            array = np.zeros_like(fft)
+            array[low:high, low:high] = fft[low:high, low:high]
+            fft_im_low.append(array)
+        recon_img_low_freq_float = np.clip(calc_ifft_three_channel(fft_im_low), 0, 1)
+        recon_img_low_freq_bgr_uint8 = float_to_uint8(recon_img_low_freq_float)
+        save_name = os.path.join(vis_root_dir, "img_ifft_recon_low_freq.png")
+        save_image_bgr(recon_img_low_freq_bgr_uint8, save_name)
+
+        im_interm_float = np.clip(recon_img_low_freq_float, 0, 1)
         im_interm_uint8 = float_to_uint8(im_interm_float)
         
         ratio_log.append(ratio)
@@ -221,8 +222,10 @@ def main(args):
         bitwise_acc_log.append(bitwise_acc)
 
         print("===== Ratio [{:02f}] =====".format(ratio))
+        print("  Low-pass bandwidth: ", h)
         print("  PSNR-w -  {:.04f} | PSNR-clean - {:.04f}".format(psnr_w, psnr_clean))
         print("  Recon Bitwise Acc. - {:.4f} % ".format(bitwise_acc * 100))
+
 
     res_log = {
         "ratios": ratio_log, 
