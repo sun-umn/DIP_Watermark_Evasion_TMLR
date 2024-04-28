@@ -19,6 +19,7 @@ import os, argparse, torch
 import cv2
 import numpy as np
 from utils.general import rgb2bgr, save_image_bgr, set_random_seeds
+from watermarkers import get_watermarkers
 
 
 def main(args):
@@ -43,8 +44,15 @@ def main(args):
     # === Init a random watermark ===
     watermark_gt = np.random.binomial(1, 0.5, 32) 
     # watermark_gt = np.zeros(32)  # This will fail the rivaGan, same for np.ones(32) 
+    # === Init watermarker ===
+    watermarker_configs = {
+        "watermarker": args.watermarker,
+        "watermark_gt": watermark_gt
+    }
+    watermarker = get_watermarkers(watermarker_configs)
 
     # Init the dict to save watermarking summary
+    save_csv_dir = os.path.join(output_root_path, "water_mark.csv")
     res_dict = {
         "ImageName": [],
         "Encoder": [],
