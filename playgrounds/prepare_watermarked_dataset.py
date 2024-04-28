@@ -18,7 +18,9 @@ sys.path.append(dir_path)
 import os, argparse, torch
 import cv2
 import numpy as np
-from utils.general import rgb2bgr, save_image_bgr, set_random_seeds
+import pandas as pd
+from utils.general import rgb2bgr, save_image_bgr, set_random_seeds, \
+    watermark_np_to_str
 from watermarkers import get_watermarkers
 
 
@@ -44,6 +46,9 @@ def main(args):
     # === Init a random watermark ===
     watermark_gt = np.random.binomial(1, 0.5, 32) 
     # watermark_gt = np.zeros(32)  # This will fail the rivaGan, same for np.ones(32) 
+    watermark_str = watermark_np_to_str(watermark_gt)
+
+
     # === Init watermarker ===
     watermarker_configs = {
         "watermarker": args.watermarker,
@@ -60,6 +65,30 @@ def main(args):
         "Match": []
     }
 
+    for img_name in img_files:
+        img_clean_path = os.path.join(dataset_input_path, img_name)
+        print("***** ***** ***** *****")
+        print("Processing Image: {} ...".format(img_clean_path))
+
+        img_w_path = os.path.join(output_img_root, img_name)
+        watermarker.encode(img_clean_path, img_w_path)
+        print("Watermarked img saved to: {}".format(img_w_path))
+
+        # === Sanity Check if watermark is embedded successfully ===
+        watermark_decode = watermarker.decode_from_path(img_w_path)
+        bitwise_acc_0 = np.mean(watermark_decode == watermark_gt)
+        print("Decode the watermarked image for sanity check (bitwise acc. should be close to 100 %)")
+        print("  Bitwise acc. {:02f} %".format(bitwise_acc_0 * 100))
+        watermark_decode_str = watermark_np_to_str(watermark_decode)
+
+        res_dict["ImageName"].append(img_name)
+        res_dict["Encoder"].append([watermark_str])
+        res_dict["Decoder"].append([watermark_decode_str])
+        res_dict["Match"].append(bitwise_acc_0 > 0.95)
+    
+    df = pd.DataFrame(res_dict)
+    df.to_csv(save_csv_dir, index=False)
+    
 
 if __name__ == "__main__":
     print("Use this script to download DiffusionDB dataset.")
@@ -74,11 +103,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dataset_name", dest="dataset_name", type=str, help="The dataset name: [COCO, DiffusionDB]",
-        default="COCO"
+        default="DiffusionDB"
     )
     parser.add_argument(
-        "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method.",
-        default="rivaGan"
+        "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method. ['dwtDctSvd', 'rivaGan']",
+        default="dwtDctSvd"
     )
     args = parser.parse_args()
     main(args)
