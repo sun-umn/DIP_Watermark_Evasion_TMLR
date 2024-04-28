@@ -103,7 +103,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dataset_name", dest="dataset_name", type=str, help="The dataset name: [COCO, DiffusionDB]",
-        default="DiffusionDB"
+        default="COCO"
     )
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method. ['dwtDctSvd', 'rivaGan']",
