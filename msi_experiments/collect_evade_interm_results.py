@@ -21,7 +21,6 @@ def main(args):
             "arch": args.arch,   # Used in DIP to select the variant architecture
             "show_every": 5,   # Used in DIP to log interm. result
             "total_iters": 500, # Used in DIP as the max_iter
-            "lr": 0.01,         # Used in DIP as the learning rate
 
             "device": torch.device("cuda"),
             "dtype": torch.float,

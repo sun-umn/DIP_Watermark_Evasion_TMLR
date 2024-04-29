@@ -56,12 +56,12 @@ def main(args):
     # === Get Evasion algorithm ===
     detection_threshold = args.detection_threshold
     print("Setting detection threshold [{:02f}] for the watermark detector.".format(detection_threshold))
-    evader = get_evasion_alg(args.evade_method)
+    evader = get_evasion_alg(args.evade_method, args.arch)
 
     # Read configs and execude evasions
     CONFIGS = {
         "dip": {
-            "arch": "vanila",   # Change this if you want to explore random projector
+            "arch": args.arch,   # Change this if you want to explore random projector
             "show_every": 5,   
             "total_iters": 500, 
             "lr": 0.01,         

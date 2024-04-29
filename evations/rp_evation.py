@@ -1,20 +1,25 @@
 import torch, cv2
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio as compute_psnr
+from .rp_utils import BNNet, tv1_loss
 
 # === Project Import ===
 from model_dip import get_net_dip
 from utils.general import uint8_to_float, float_to_int, img_np_to_tensor, \
     tensor_output_to_image_np, watermark_np_to_str, compute_bitwise_acc
 
-
 #===========================================================#
 # === Global hyper-parameters for Random Projector ===#
 #===========================================================#
-LR = 0.01
+TV_WEIGHT = 0.45
+LR = 1e-1
+DEPTH = 3
+W = 512
+H = 512
+
 
 def get_model(dig_cfgs):
-    if dig_cfgs["arch"] == "vanila":
+    if dig_cfgs["arch"] == "random_projector":
         dip_model = get_net_dip(dig_cfgs["arch"])
     else:
         raise RuntimeError("Unsupported DIP architecture.")
@@ -22,7 +27,7 @@ def get_model(dig_cfgs):
     return dip_model
 
 
-def dip_evasion_single_img(
+def rp_evasion_single_img(
     im_orig_path, im_w_path, watermarker, watermark_gt, dip_cfgs=None
 ):
     """
@@ -42,11 +47,27 @@ def dip_evasion_single_img(
     verbose = dip_cfgs["verbose"]
 
     watermark_gt_str = watermark_np_to_str(watermark_gt)
-    # Init A DIP model
+
+    # Init a random projector model
     dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
     show_every = dip_cfgs["show_every"]
     total_iters = dip_cfgs["total_iters"]
-    params = dip_model.parameters()
+    
+    #===========================================================#
+    # Create a trainable batch norm and input seed
+    #===========================================================#
+    bnnet = BNNet(DEPTH)
+    noise_like = torch.empty(1, DEPTH, W, H)
+    g_noise = torch.zeros_like(noise_like).normal_() * 1e-1
+    g_noise.requires_grad = True
+
+    #===========================================================#
+    # Define Optimizer
+    #===========================================================#
+    params = []
+    params += dip_model.parameters()
+    params += bnnet.parameters()
+    params += [g_noise]
     optimizer = torch.optim.Adam(params, lr=LR)
     loss_func = torch.nn.MSELoss()
 
@@ -73,11 +94,14 @@ def dip_evasion_single_img(
 
     for num_iter in range(total_iters):
         optimizer.zero_grad()
-        net_input = im_w_bgr_tensor
-        net_output = dip_model(net_input)
-        
+        #===========================================================#
         # Compute Loss and Update 
+        #===========================================================#
+        g_noise_input = bnnet(g_noise)
+        net_output = dip_model(g_noise_input)
         total_loss = loss_func(net_output, im_w_bgr_tensor)
+        total_loss = torch.sqrt(total_loss)
+        total_loss = total_loss + TV_WEIGHT * tv1_loss(net_output)
         total_loss.backward()
         optimizer.step()
 
@@ -139,55 +163,6 @@ def dip_evasion_single_img(
         "mse_to_orig": mse_clean_log,
         "mse_to_watermark": mse_w_log,
         "mse_clean_to_w": mse_orig_w
-    }
-    return return_log
-
-
-def dip_interm_collection(im_w_uint8_bgr, dip_cfgs=None):
-    """
-        This function is used to collect all interm. results for large-scale dataset experiments.
-    """
-    assert dip_cfgs is not None, "Must include configs of the dip evation algo."
-    device = dip_cfgs["device"]
-    dtype = dip_cfgs["dtype"]
-
-    # Init A DIP model
-    dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
-    show_every = dip_cfgs["show_every"]
-    total_iters = dip_cfgs["total_iters"]
-    lr = dip_cfgs["lr"]
-    params = dip_model.parameters()
-    optimizer = torch.optim.Adam(params, lr=lr)
-    loss_func = torch.nn.MSELoss()
-
-    # Prepare log-info
-    index_log = []    # Record DIP iter.
-    interm_log = []   # Record DIP interm. reconstruction
-
-    # Optimize
-    im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
-    im_w_bgr_tensor = img_np_to_tensor(im_w_bgr_float).to(device, dtype=dtype)
-    for num_iter in range(total_iters):
-        optimizer.zero_grad()
-        net_input = im_w_bgr_tensor
-        net_output = dip_model(net_input)
-
-        # Compute Loss and Update 
-        total_loss = loss_func(net_output, im_w_bgr_tensor)
-        total_loss.backward()
-        optimizer.step()
-
-        if num_iter % show_every == 0:
-            # Log iter number
-            index_log.append(num_iter)
-            # Log interm. reconstruction
-            img_recon = tensor_output_to_image_np(net_output)
-            img_rencon_np_int = float_to_int(img_recon)
-            interm_log.append(img_rencon_np_int.astype(np.int8))
-
-    return_log = {
-        "index": index_log,
-        "interm_recon": interm_log
     }
     return return_log
 

@@ -2,8 +2,9 @@ from .skip import skip
 import torch.nn as nn
 import torch
 
-def get_net_dip(NET_TYPE="skip"):
-    if NET_TYPE == 'skip':
+def get_net_dip(NET_TYPE="vanila"):
+    if NET_TYPE == "vanila":
+        print(" *** Vanila DIP Model *** ")
         input_depth = 3
         pad = "reflection"
         upsample_mode = 'bilinear'
@@ -19,15 +20,30 @@ def get_net_dip(NET_TYPE="skip"):
                                             num_channels_skip = [skip_n11]*num_scales if isinstance(skip_n11, int) else skip_n11, 
                                             upsample_mode=upsample_mode, downsample_mode=downsample_mode,
                                             need_sigmoid=True, need_bias=True, pad=pad, act_fun=act_fun)
-    # elif NET_TYPE == "random_projector":
-        #### YOUR CODE HERE ####
-        # Make the line below callable and return a random projector model
-
-        # net = RandomProjector() 
-        #### ####################
+    elif NET_TYPE == "random_projector":
+        print(" *** Rnadom Projector Model *** ")
+        input_depth = 3
+        pad = "reflection"
+        upsample_mode = 'bilinear'
+        n_channels = 3
+        act_fun = 'LeakyReLU'
+        skip_n33d = 64
+        skip_n33u = 64
+        skip_n11 = 4
+        num_scales = 1
+        downsample_mode='stride'
+        net = skip(input_depth, n_channels, num_channels_down = [skip_n33d]*num_scales if isinstance(skip_n33d, int) else skip_n33d,
+                                            num_channels_up =   [skip_n33u]*num_scales if isinstance(skip_n33u, int) else skip_n33u,
+                                            num_channels_skip = [skip_n11]*num_scales if isinstance(skip_n11, int) else skip_n11, 
+                                            upsample_mode=upsample_mode, downsample_mode=downsample_mode,
+                                            need_sigmoid=True, need_bias=True, pad=pad, act_fun=act_fun)
+        
+        for module in net.modules():
+            if isinstance(module, nn.Conv2d):
+                module.weight.requires_grad = False
+                module.bias.requires_grad = False
     else:
         assert False
-    # initialize_weights(net)
     return net
 
 

@@ -33,7 +33,7 @@ def main(args):
         for img_idx in range(n_recon):
             img_bgr_uint8 = img_recon_list[img_idx]    # shape [512, 512, 3]
             
-            # ############ YOUR CODE HERE ################
+            # =================== YOUR CODE HERE =========================== #
             
             # Step 0: if you need to change the input format
             img_input = reformat(img_bgr_uint8)
@@ -45,7 +45,7 @@ def main(args):
             # Step 2: log the result
             watermark_decoded_log.append(watermark_decoded_str)
 
-            # ######### Code Change Ends Here  ###########
+            # ============================================================= #
         
         # Save the result
         data_dict["watermark_decoded"] = watermark_decoded_log
