@@ -56,8 +56,8 @@ def rp_evasion_single_img(
     #===========================================================#
     # Create a trainable batch norm and input seed
     #===========================================================#
-    bnnet = BNNet(DEPTH)
-    noise_like = torch.empty(1, DEPTH, W, H)
+    bnnet = BNNet(DEPTH).to(device, dtype=dtype)
+    noise_like = torch.empty(1, DEPTH, W, H).to(device)
     g_noise = torch.zeros_like(noise_like).normal_() * 1e-1
     g_noise.requires_grad = True
 
@@ -99,9 +99,11 @@ def rp_evasion_single_img(
         #===========================================================#
         g_noise_input = bnnet(g_noise)
         net_output = dip_model(g_noise_input)
-        total_loss = loss_func(net_output, im_w_bgr_tensor)
-        total_loss = torch.sqrt(total_loss)
-        total_loss = total_loss + TV_WEIGHT * tv1_loss(net_output)
+        mse_loss = loss_func(net_output, im_w_bgr_tensor)
+        mse_loss = torch.sqrt(mse_loss)
+        tv_loss = tv1_loss(net_output)
+        total_loss = mse_loss + TV_WEIGHT * tv_loss
+        print("Loss component: MSE [{}] - TV [{}]".format(mse_loss.item(), tv_loss.item()))
         total_loss.backward()
         optimizer.step()
 
@@ -138,7 +140,7 @@ def rp_evasion_single_img(
             bitwise_acc_log.append(bitwise_acc)
 
             # Update the best recon result
-            if psnr_recon_w > best_psnr and bitwise_acc < detection_threshold:
+            if psnr_recon_w > best_psnr and bitwise_acc < detection_threshold and bitwise_acc > (1-detection_threshold):  # double side detection
                 best_iter = num_iter
                 best_psnr = psnr_recon_w
                 best_mse = mse_watermark

@@ -114,7 +114,7 @@ def dip_evasion_single_img(
             bitwise_acc_log.append(bitwise_acc)
 
             # Update the best recon result
-            if psnr_recon_w > best_psnr and bitwise_acc < detection_threshold:
+            if psnr_recon_w > best_psnr and bitwise_acc < detection_threshold and bitwise_acc > (1-detection_threshold):
                 best_iter = num_iter
                 best_psnr = psnr_recon_w
                 best_mse = mse_watermark

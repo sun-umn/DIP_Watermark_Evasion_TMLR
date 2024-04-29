@@ -62,9 +62,8 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": args.arch,   # Change this if you want to explore random projector
-            "show_every": 5,   
-            "total_iters": 500, 
-            "lr": 0.01,         
+            "show_every": 5 if args.arch=="vanila" else 2,   
+            "total_iters": 500 if args.arch=="vanila" else 100,        
 
             "device": device,
             "dtype": torch.float,
@@ -134,7 +133,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
         "--random_seed", dest="random_seed", type=int, help="Manually set random seed for reproduction.",
-        default=13
+        default=38
     )
     parser.add_argument(
         '--root_path_im_orig', type=str, help="Root folder to the clean images.",
@@ -168,7 +167,7 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="bm3d"
+        default="vanila"
     )
     parser.add_argument(
         "--detection_threshold", dest="detection_threshold", type=float, default=0.75,
