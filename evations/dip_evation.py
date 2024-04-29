@@ -139,6 +139,55 @@ def dip_evasion_single_img(
     return return_log
 
 
+def dip_interm_collection(im_w_uint8_bgr, dip_cfgs=None):
+    """
+        This function is used to collect all interm. results for large-scale dataset experiments.
+    """
+    assert dip_cfgs is not None, "Must include configs of the dip evation algo."
+    device = dip_cfgs["device"]
+    dtype = dip_cfgs["dtype"]
+
+    # Init A DIP model
+    dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
+    show_every = dip_cfgs["show_every"]
+    total_iters = dip_cfgs["total_iters"]
+    lr = dip_cfgs["lr"]
+    params = dip_model.parameters()
+    optimizer = torch.optim.Adam(params, lr=lr)
+    loss_func = torch.nn.MSELoss()
+
+    # Prepare log-info
+    index_log = []    # Record DIP iter.
+    interm_log = []   # Record DIP interm. reconstruction
+
+    # Optimize
+    im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
+    im_w_bgr_tensor = img_np_to_tensor(im_w_bgr_float).to(device, dtype=dtype)
+    for num_iter in range(total_iters):
+        optimizer.zero_grad()
+        net_input = im_w_bgr_tensor
+        net_output = dip_model(net_input)
+
+        # Compute Loss and Update 
+        total_loss = loss_func(net_output, im_w_bgr_tensor)
+        total_loss.backward()
+        optimizer.step()
+
+        if num_iter % show_every == 0:
+            # Log iter number
+            index_log.append(num_iter)
+            # Log interm. reconstruction
+            img_recon = tensor_output_to_image_np(net_output)
+            img_rencon_np_int = float_to_int(img_recon)
+            interm_log.append(img_rencon_np_int.astype(np.int8))
+
+    return_log = {
+        "index": index_log,
+        "interm_recon": interm_log
+    }
+    return return_log
+
+
 if __name__ == "__main__":
     print("Unit test goes here.")
     

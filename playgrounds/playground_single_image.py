@@ -61,10 +61,10 @@ def main(args):
     # Read configs and execude evasions
     CONFIGS = {
         "dip": {
-            "arch": "vanila",   # Used in DIP to select the variant architecture
-            "show_every": 5,   # Used in DIP to log interm. result
-            "total_iters": 500, # Used in DIP as the max_iter
-            "lr": 0.01,         # Used in DIP as the learning rate
+            "arch": "vanila",   # Change this if you want to explore random projector
+            "show_every": 5,   
+            "total_iters": 500, 
+            "lr": 0.01,         
 
             "device": device,
             "dtype": torch.float,
@@ -74,7 +74,7 @@ def main(args):
         },
 
         "vae": {
-            "arch": "cheng2020-anchor",   # Used in vae to select the variant architecture
+            "arch": "cheng2020-anchor",   # Change this to explore other pretrained VAE
 
             "device": torch.device("cuda"),
             "detection_threshold": detection_threshold,
@@ -82,7 +82,7 @@ def main(args):
         },
 
         "corrupters": {
-            "arch": args.arch,
+            "arch": args.arch,   # Specify which common corruption to explore
             "detection_threshold": detection_threshold,
             "verbose": True,
         },
@@ -158,7 +158,16 @@ if __name__ == "__main__":
         default="dip"
     )
     parser.add_argument(
-        "--arch", dest="arch", type=str, help="Secondary specification of evasion method (if there are other choices).",
+        "--arch", dest="arch", type=str, 
+        help="""
+            Secondary specification of evasion method (if there are other choices).
+            
+            Valid values a listed below:
+                dip --- ["vanila", "random_projector"],
+                vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
+                corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
+                diffuser --- Do not need.
+        """,
         default="bm3d"
     )
     parser.add_argument(

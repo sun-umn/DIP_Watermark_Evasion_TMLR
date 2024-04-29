@@ -4,10 +4,10 @@ sys.path.append(dir_path)
 dir_path = os.path.abspath("..")
 sys.path.append(dir_path)
 
-import argparse
+import argparse, torch, pickle
 
 from utils.data_loader import WatermarkedImageDataset
-
+from evations import get_interm_collection_algo
 
 def main(args):
     # === Get watermarked data ===
@@ -15,28 +15,71 @@ def main(args):
     dataset = WatermarkedImageDataset(dataset_root_dir)
     print("Experimenting dataset: {}".format(dataset_root_dir))
 
+    # === Constrcut config wrapper ===
+    CONFIGS = {
+        "dip": {
+            "arch": args.arch,   # Used in DIP to select the variant architecture
+            "show_every": 5,   # Used in DIP to log interm. result
+            "total_iters": 500, # Used in DIP as the max_iter
+            "lr": 0.01,         # Used in DIP as the learning rate
+
+            "device": torch.device("cuda"),
+            "dtype": torch.float,
+        },
+
+        "vae": {
+            "arch": args.arch,   # Used in vae to select the variant architecture
+            "device": torch.device("cuda"),
+        },
+
+        "corrupters": {
+            "arch": args.arch,
+        },
+
+        "diffuser": {
+            "arch": "dummy",
+        }
+    }
+    evade_cfgs = CONFIGS[args.evade_method]
+    
     # === Create Path to save exp results ===
-    log_root_dir = os.path.join("Interm-Result", args.watermarker, args.dataset)
+    log_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, evade_cfgs["arch"])
     os.makedirs(log_root_dir, exist_ok=True)
 
     num_images = len(dataset)
     print("Total num. of images: {}".format(num_images))
-    
-    for idx in range(num_images):
+    print("Interm. collection started ...")
+
+    for idx in range(2):
+    # for idx in range(num_images):
         sample_data = dataset[idx]
 
-        # Init a dictionary to save all necessary data
-        res_dict = {}
-        # Interm Result save path
+        watermark_gt_str = sample_data["watermark_gt_str"]
+        watermark_encoded_str = sample_data["watermark_encoded_str"]
         img_name = sample_data["image_name"]
-        save_res_name = os.path.join(log_root_dir, "{}.pkl".format(img_name))
 
-        # === Watermark Evasion process (interm. result registration) ===
+        if watermark_gt_str == watermark_encoded_str:
+            # Interm Result save path    
+            save_res_name = os.path.join(log_root_dir, "{}.pkl".format(img_name))
 
+            # === Watermark Evasion process (interm. result registration) ===
+            evader = get_interm_collection_algo(args.evade_method)
+            im_w_bgr_uint8 = sample_data["image_bgr_uint8"]
+            interm_res = evader(im_w_bgr_uint8, evade_cfgs)
+            
+            # Append the gt watermark into the file for easier processing later.
+            interm_res["watermark_gt_str"] = watermark_gt_str  
 
-        # === save result to pkl ===
-        
+            # === save result to pkl ===
+            with open(save_res_name, 'wb') as f:
+                pickle.dump(interm_res, f, protocol=pickle.HIGHEST_PROTOCOL)
+            print("{} recon. result saved to path: {}".format(img_name, save_res_name))
+            print("\n")
 
+        else:
+            print("Watermark of {} does not work properly using {} watermarker.".format(img_name, args.watermarker))
+            print("Skip recon.  \n")
+    
 
 if __name__ == "__main__": 
     """
@@ -63,8 +106,17 @@ if __name__ == "__main__":
         default="dip"
     )
     parser.add_argument(
-        "--arch", dest="arch", type=str, help="Secondary specification of evasion method (if there are other choices).",
-        default="bm3d"
+        "--arch", dest="arch", type=str, 
+        help="""
+            Secondary specification of evasion method (if there are other choices).
+
+            Valid values a listed below:
+                dip --- ["vanila", "random_projector"],
+                vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
+                corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
+                diffuser --- Do not need.
+        """,
+        default="vanila"
     )
     args = parser.parse_args()
     main(args)

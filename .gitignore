@@ -4,7 +4,7 @@ Vis*
 test*
 dataset/examples/COCO
 dataset/examples/DiffusionDB
-Interm-*
+Result-*
 
 # === Standard build files ====
 
