@@ -154,7 +154,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="dip"
+        default="vae"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="vanila"
+        default="cheng2020-anchor"
     )
     parser.add_argument(
         "--detection_threshold", dest="detection_threshold", type=float, default=0.75,

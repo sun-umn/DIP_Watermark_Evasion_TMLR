@@ -7,7 +7,9 @@ sys.path.append(dir_path)
 import argparse, torch, pickle
 
 from utils.data_loader import WatermarkedImageDataset
+from utils.general import save_image_bgr
 from evations import get_interm_collection_algo
+
 
 def main(args):
     # === Get watermarked data ===
@@ -19,8 +21,8 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": args.arch,   # Used in DIP to select the variant architecture
-            "show_every": 5,   # Used in DIP to log interm. result
-            "total_iters": 500, # Used in DIP as the max_iter
+            "show_every": 5 if args.arch == "vanila" else 1,
+            "total_iters": 500 if args.arch == "vanila" else 150, # Used in DIP as the max_iter
 
             "device": torch.device("cuda"),
             "dtype": torch.float,
@@ -36,7 +38,7 @@ def main(args):
         },
 
         "diffuser": {
-            "arch": "dummy",
+            "arch": "dummy",  # No second option for diffusion model
         }
     }
     evade_cfgs = CONFIGS[args.evade_method]
@@ -62,7 +64,7 @@ def main(args):
             save_res_name = os.path.join(log_root_dir, "{}.pkl".format(img_name))
 
             # === Watermark Evasion process (interm. result registration) ===
-            evader = get_interm_collection_algo(args.evade_method)
+            evader = get_interm_collection_algo(args.evade_method, args.arch)
             im_w_bgr_uint8 = sample_data["image_bgr_uint8"]
             interm_res = evader(im_w_bgr_uint8, evade_cfgs)
             
@@ -79,6 +81,12 @@ def main(args):
             print("Watermark of {} does not work properly using {} watermarker.".format(img_name, args.watermarker))
             print("Skip recon.  \n")
     
+    # === Test Vis ===
+    test_img = interm_res["interm_recon"][0]
+    save_name = "Vis-test-{}-{}.png".format(args.evade_method, args.arch)
+    save_image_bgr(test_img, save_name)
+    
+
 
 if __name__ == "__main__": 
     """

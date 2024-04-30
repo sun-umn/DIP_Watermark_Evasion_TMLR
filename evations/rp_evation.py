@@ -169,6 +169,73 @@ def rp_evasion_single_img(
     return return_log
 
 
+def rp_interm_collection(im_w_uint8_bgr, dip_cfgs=None):
+    """
+        This function is used to collect all interm. results for large-scale dataset experiments.
+    """
+    assert dip_cfgs is not None, "Must include configs of the dip evation algo."
+    device = dip_cfgs["device"]
+    dtype = dip_cfgs["dtype"]
+
+    # Init a random projector
+    rp_model = get_model(dip_cfgs).to(device, dtype=dtype)
+    show_every = dip_cfgs["show_every"]
+    total_iters = dip_cfgs["total_iters"]
+    
+    #===========================================================#
+    # Create a trainable batch norm and input seed
+    #===========================================================#
+    bnnet = BNNet(DEPTH).to(device, dtype=dtype)
+    noise_like = torch.empty(1, DEPTH, W, H).to(device)
+    g_noise = torch.zeros_like(noise_like).normal_() * 1e-1
+    g_noise.requires_grad = True
+
+    #===========================================================#
+    # Define Optimizer
+    #===========================================================#
+    params = []
+    params += rp_model.parameters()
+    params += bnnet.parameters()
+    params += [g_noise]
+    optimizer = torch.optim.Adam(params, lr=LR)
+    loss_func = torch.nn.MSELoss()
+    
+    # Prepare log-info
+    index_log = []    # Record DIP iter.
+    interm_log = []   # Record DIP interm. reconstruction
+
+    # Optimize
+    im_w_bgr_float = uint8_to_float(im_w_uint8_bgr)
+    im_w_bgr_tensor = img_np_to_tensor(im_w_bgr_float).to(device, dtype=dtype)
+    for num_iter in range(total_iters):
+        optimizer.zero_grad()
+        #===========================================================#
+        # Compute Loss and Update 
+        #===========================================================#
+        g_noise_input = bnnet(g_noise)
+        net_output = rp_model(g_noise_input)
+        mse_loss = loss_func(net_output, im_w_bgr_tensor)
+        mse_loss = torch.sqrt(mse_loss)
+        tv_loss = tv1_loss(net_output)
+        total_loss = mse_loss + TV_WEIGHT * tv_loss
+        print("Loss component: MSE [{}] - TV [{}]".format(mse_loss.item(), tv_loss.item()))
+        total_loss.backward()
+        optimizer.step()
+
+        if num_iter % show_every == 0:
+            # Log iter number
+            index_log.append(num_iter)
+            # Log interm. reconstruction
+            img_recon = tensor_output_to_image_np(net_output)
+            img_rencon_np_int = float_to_int(img_recon)
+            interm_log.append(img_rencon_np_int.astype(np.int8))
+            
+    return_log = {
+        "index": index_log,
+        "interm_recon": interm_log
+    }
+    return return_log
+
 if __name__ == "__main__":
     print("Unit test goes here.")
     

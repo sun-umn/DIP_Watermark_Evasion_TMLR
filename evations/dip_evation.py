@@ -155,9 +155,9 @@ def dip_interm_collection(im_w_uint8_bgr, dip_cfgs=None):
     dip_model  = get_model(dip_cfgs).to(device, dtype=dtype)
     show_every = dip_cfgs["show_every"]
     total_iters = dip_cfgs["total_iters"]
-    lr = dip_cfgs["lr"]
+
     params = dip_model.parameters()
-    optimizer = torch.optim.Adam(params, lr=lr)
+    optimizer = torch.optim.Adam(params, lr=LR)
     loss_func = torch.nn.MSELoss()
 
     # Prepare log-info
