@@ -275,7 +275,7 @@ def corruption_interm_collection(im_w_uint8_bgr, evader_cfg=None):
         im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
 
         index_log.append(level)
-        interm_log.append(interm_log)
+        interm_log.append(im_recon_bgr)
     
     return_log = {
         "index": index_log,
