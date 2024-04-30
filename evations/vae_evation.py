@@ -30,7 +30,8 @@ class VAEWMAttacker():
     def regenerate_from_cv2np(self, im_bgr_uint8_np):
         img_rgb_uint8_np = bgr2rgb(im_bgr_uint8_np)
         img_rgb_float = uint8_to_float(img_rgb_uint8_np)
-        img = torch.from_numpy(img_rgb_float).unsqueeze(0).to(self.device, dtype=torch.float)
+        img = np.transpose(img_rgb_float, [2, 0, 1])
+        img = torch.from_numpy(img).unsqueeze(0).to(self.device, dtype=torch.float)
         out = self.model(img)["x_hat"]
         out = torch.clamp(out, 0, 1)
 
@@ -40,7 +41,6 @@ class VAEWMAttacker():
         )
         return out_np
     
-
     def regenerate_from_file(self, im_w_path):
         img = Image.open(im_w_path).convert('RGB')  # RGB in uint8
         img = img.resize((512, 512))

@@ -183,7 +183,7 @@ def dip_interm_collection(im_w_uint8_bgr, dip_cfgs=None):
             # Log interm. reconstruction
             img_recon = tensor_output_to_image_np(net_output)
             img_rencon_np_int = float_to_int(img_recon)
-            interm_log.append(img_rencon_np_int.astype(np.int8))
+            interm_log.append(img_rencon_np_int.astype(np.uint8))
 
     return_log = {
         "index": index_log,

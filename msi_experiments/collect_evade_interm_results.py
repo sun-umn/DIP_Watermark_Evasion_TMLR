@@ -21,7 +21,7 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": args.arch,   # Used in DIP to select the variant architecture
-            "show_every": 5 if args.arch == "vanila" else 1,
+            "show_every": 5 if args.arch == "vanila" else 2,
             "total_iters": 500 if args.arch == "vanila" else 150, # Used in DIP as the max_iter
 
             "device": torch.device("cuda"),
@@ -51,8 +51,7 @@ def main(args):
     print("Total num. of images: {}".format(num_images))
     print("Interm. collection started ...")
 
-    for idx in range(2):
-    # for idx in range(num_images):
+    for idx in range(num_images):
         sample_data = dataset[idx]
 
         watermark_gt_str = sample_data["watermark_gt_str"]
@@ -81,10 +80,14 @@ def main(args):
             print("Watermark of {} does not work properly using {} watermarker.".format(img_name, args.watermarker))
             print("Skip recon.  \n")
     
-    # === Test Vis ===
-    test_img = interm_res["interm_recon"][0]
-    save_name = "Vis-test-{}-{}.png".format(args.evade_method, args.arch)
-    save_image_bgr(test_img, save_name)
+    # # === Test Vis ===
+    # test_img = interm_res["interm_recon"][0]
+    # save_name = "Vis-test-{}-{}-0.png".format(args.evade_method, args.arch)
+    # save_image_bgr(test_img, save_name)
+
+    # test_img = interm_res["interm_recon"][-1]
+    # save_name = "Vis-test-{}-{}-1.png".format(args.evade_method, args.arch)
+    # save_image_bgr(test_img, save_name)
     
 
 
@@ -110,7 +113,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="dip"
+        default="diffuser"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -123,7 +126,7 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="vanila"
+        default="gaussian_noise"
     )
     args = parser.parse_args()
     main(args)
