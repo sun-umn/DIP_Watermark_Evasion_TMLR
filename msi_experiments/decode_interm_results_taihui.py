@@ -10,6 +10,7 @@
 import argparse
 import pickle, os
 
+
 def main(args):
     # === This is where the interm. results are saved ===
     data_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, args.arch)
