@@ -21,7 +21,7 @@ from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 # sys.path.append(dir_path)
 # ############  ############  #############
 
-from utils.general import uint8_to_float, float_to_uint8, rgb2bgr
+from utils.general import uint8_to_float, float_to_uint8, rgb2bgr, bgr2rgb
 from skimage.util import random_noise
 from utils.general import uint8_to_float, float_to_uint8, \
     watermark_np_to_str, compute_bitwise_acc, rgb2bgr
@@ -32,9 +32,12 @@ class GaussianBlurAttacker():
         self.kernel_size = kernel_size
         self.sigma = sigma
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_path(self, im_w_path):
         img_bgr = cv2.imread(im_w_path)
-        noisy_img_bgr = cv2.GaussianBlur(img_bgr, (self.kernel_size, self.kernel_size), self.sigma)
+        return self.regenerate(img_bgr)
+    
+    def regenerate(self, im_w_bgr_unit8):
+        noisy_img_bgr = cv2.GaussianBlur(im_w_bgr_unit8, (self.kernel_size, self.kernel_size), self.sigma)
         return noisy_img_bgr
 
 
@@ -42,9 +45,12 @@ class GaussianNoiseAttacker():
     def __init__(self, std=1):
         self.std = std
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_path(self, im_w_path):
         img_bgr = cv2.imread(im_w_path)
-        image = uint8_to_float(img_bgr)
+        return self.regenerate(img_bgr)
+
+    def regenerate(self, im_w_bgr_uint8):
+        image = uint8_to_float(im_w_bgr_uint8)
         # Add Gaussian noise to the image
         noise_sigma = self.std  # Vary this to change the amount of noise
         noisy_image = random_noise(image, mode='gaussian', var=noise_sigma ** 2)
@@ -58,9 +64,16 @@ class BM3DAttacker():
     def __init__(self, std=0.1):
         self.std = std  # Comment from the original code: use standard deviation as 0.1, 0.05 also works
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_file(self, im_w_path):
         img = Image.open(im_w_path).convert('RGB')
         y_est = bm3d_rgb(np.array(img) / 255, self.std)
+        img_bgr = rgb2bgr(y_est)
+        img_bgr = float_to_uint8(img_bgr)
+        return img_bgr
+
+    def regenerate(self, im_w_bgr_uint8):
+        img_rgb = bgr2rgb(im_w_bgr_uint8).astype(np.float32)
+        y_est = bm3d_rgb(img_rgb / 255., self.std)
         img_bgr = rgb2bgr(y_est)
         img_bgr = float_to_uint8(img_bgr)
         return img_bgr
@@ -71,10 +84,13 @@ class JPEGAttacker():
         self.quality = int(quality * 100)
         print("JPEG compression quality: {:d}".format(self.quality))
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_file(self, im_w_path):
         img_bgr = cv2.imread(im_w_path)
+        return self.regenerate(img_bgr)
+    
+    def regenerate(self, im_w_bgr_uint8):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), self.quality]
-        _, img_encoded = cv2.imencode('.jpg', img_bgr, encode_param)     
+        _, img_encoded = cv2.imencode('.jpg', im_w_bgr_uint8, encode_param)     
         img_decoded = cv2.imdecode(img_encoded, 1)
         return img_decoded
 
@@ -83,8 +99,16 @@ class BrightnessAttacker():
     def __init__(self, brightness=0.2):
         self.brightness = brightness
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_file(self, im_w_path):
         img = Image.open(im_w_path)
+        enhancer = ImageEnhance.Brightness(img)
+        img = enhancer.enhance(self.brightness)
+        img = rgb2bgr(np.array(img))
+        return img
+    
+    def regenerate(self, im_w_bgr_uint8):
+        img = bgr2rgb(im_w_bgr_uint8)
+        img = Image.fromarray(img)
         enhancer = ImageEnhance.Brightness(img)
         img = enhancer.enhance(self.brightness)
         img = rgb2bgr(np.array(img))
@@ -95,8 +119,16 @@ class ContrastAttacker():
     def __init__(self, contrast=0.2):
         self.contrast = contrast
 
-    def regenerate(self, im_w_path):
+    def regenerate_from_file(self, im_w_path):
         img = Image.open(im_w_path)
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(self.contrast)
+        img = rgb2bgr(np.array(img))
+        return img
+    
+    def regenerate(self, im_w_bgr_uint8):
+        img = bgr2rgb(im_w_bgr_uint8)
+        img = Image.fromarray(img)
         enhancer = ImageEnhance.Contrast(img)
         img = enhancer.enhance(self.contrast)
         img = rgb2bgr(np.array(img))
@@ -179,7 +211,7 @@ def corruption_evation_single_img(
 
     for level in levels:
         evader = get_corrupter(evader_cfg, level)
-        im_recon_bgr = evader.regenerate(im_w_path)
+        im_recon_bgr = evader.regenerate_from_path(im_w_path)
 
         # === Compute Some Stats ===
         watermark_recon = watermarker.decode(im_recon_bgr)
@@ -225,6 +257,33 @@ def corruption_evation_single_img(
     return return_log
 
 
+def corruption_interm_collection(im_w_uint8_bgr, evader_cfg=None):
+    """
+        This function is used to collect all interm. results for large-scale dataset experiments.
+    """
+    assert evader_cfg is not None, "Must input corruption configs."
+
+    # === Init the corruption evasion ===
+    levels = get_levels(evader_cfg)
+
+    # Prepare log-info
+    index_log = []
+    interm_log = []
+
+    for level in levels:
+        evader = get_corrupter(evader_cfg, level)
+        im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+
+        index_log.append(level)
+        interm_log.append(interm_log)
+    
+    return_log = {
+        "index": index_log,
+        "interm_recon": interm_log
+    }
+    return return_log
+
+
 if __name__ == "__main__":
     import os
     test_img_path = os.path.join("examples", "ori_imgs", "000000000711.png")
@@ -233,6 +292,6 @@ if __name__ == "__main__":
     evader = ContrastAttacker(contrast=10)
     # ===   ===    ===    ===    ===    ===    ===   ===
 
-    img_regenerate = evader.regenerate(test_img_path)
+    img_regenerate = evader.regenerate_from_file(test_img_path)
     cv2.imwrite("test_corruption.png", img_regenerate)
     print()
