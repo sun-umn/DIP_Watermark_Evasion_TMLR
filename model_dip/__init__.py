@@ -1,6 +1,6 @@
 from .skip import skip
 import torch.nn as nn
-import torch
+
 
 def get_net_dip(NET_TYPE="vanila"):
     if NET_TYPE == "vanila":
