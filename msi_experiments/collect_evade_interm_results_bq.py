@@ -282,6 +282,7 @@ def main(args):
             res_dict["best_recon"] = [best_adv_im_bgr_uint8]
             res_dict["best_num_query"] = [saved_num_queries_ls]
 
+            print("Best number of queries: ", saved_num_queries_ls[0])
             # === save result to pkl ===
             with open(save_res_name, 'wb') as f:
                 pickle.dump(res_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -290,8 +291,6 @@ def main(args):
         else:
             print("Watermark of {} does not work properly using {} watermarker.".format(img_name, args.watermarker))
             print("Skip recon.  \n")
-
-
 
 
 if __name__ == "__main__": 
