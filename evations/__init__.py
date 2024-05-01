@@ -1,6 +1,6 @@
 from .dip_evation import dip_evasion_single_img, dip_interm_collection
 from .rp_evation import rp_evasion_single_img, rp_interm_collection
-# from .vae_evation import vae_evasion_single_img, vae_interm_collection
+from .vae_evation import vae_evasion_single_img, vae_interm_collection
 from .corrupters import corruption_evation_single_img, corruption_interm_collection
 from .diffusion_evation import diffuser_evation_single_img, diffuser_interm_collection
 
