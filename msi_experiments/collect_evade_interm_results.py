@@ -55,8 +55,8 @@ def main(args):
     for idx in range(num_images):
         sample_data = dataset[idx]
 
-        watermark_gt_str = sample_data["watermark_gt_str"]
-        watermark_encoded_str = sample_data["watermark_encoded_str"]
+        watermark_gt_str = eval(sample_data["watermark_gt_str"])[0]
+        watermark_encoded_str = eval(sample_data["watermark_encoded_str"])[0]
         img_name = sample_data["image_name"]
 
         if watermark_gt_str == watermark_encoded_str:

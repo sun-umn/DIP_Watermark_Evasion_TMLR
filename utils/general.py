@@ -59,6 +59,11 @@ def watermark_np_to_str(watermark_np):
     return "".join([str(i) for i in watermark_np.tolist()])
 
 
+def watermark_str_to_numpy(watermark_str):
+    result = [int(i) for i in watermark_str]
+    return np.asarray(result)
+
+
 def compute_bitwise_acc(watermark_gt, watermark_decoded):
     """
         Compute the bitwise acc., both inputs in ndarray.
