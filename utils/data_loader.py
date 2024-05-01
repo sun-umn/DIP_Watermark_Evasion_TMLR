@@ -8,10 +8,11 @@ class WatermarkedImageDataset(Dataset):
     """
         A customized dataset to make loading the watermarked images with convenience.
     """
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, is_stegastamp=False):
         self.root_dir = root_dir
         csv_file_path = os.path.join(self.root_dir, "water_mark.csv")
         self.annot_data = pd.read_csv(csv_file_path)
+        self.is_stega = is_stegastamp
 
     def __len__(self):
         return len(self.annot_data)
@@ -20,6 +21,9 @@ class WatermarkedImageDataset(Dataset):
         data = self.annot_data.iloc[idx]
 
         image_name = data["ImageName"]
+        if self.is_stega:
+            file_str = image_name.split(".")[0]
+            image_name = file_str + "_hidden.png"
         image_path = os.path.join(self.root_dir, "encoder_img", image_name)
         image_bgr_np = cv2.imread(image_path)
         watermark_gt_str = data["Encoder"]

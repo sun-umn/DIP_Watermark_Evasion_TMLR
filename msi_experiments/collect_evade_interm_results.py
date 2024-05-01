@@ -14,7 +14,8 @@ from evations import get_interm_collection_algo
 def main(args):
     # === Get watermarked data ===
     dataset_root_dir = os.path.join(".", "dataset", args.watermarker, args.dataset)
-    dataset = WatermarkedImageDataset(dataset_root_dir)
+    is_stegastamp = args.watermarker == "StegaStamp"
+    dataset = WatermarkedImageDataset(dataset_root_dir, is_stegastamp)
     print("Experimenting dataset: {}".format(dataset_root_dir))
 
     # === Constrcut config wrapper ===
