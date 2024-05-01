@@ -5,6 +5,7 @@ test*
 dataset/examples/COCO
 dataset/examples/DiffusionDB
 Result-*
+slurm*
 
 # === Standard build files ====
 

@@ -1,6 +1,4 @@
 # === Used in https://github.com/XuandongZhao/WatermarkAttacker/tree/main ===
-torch
-torchvision
 transformers
 opencv-python
 invisible-watermark
