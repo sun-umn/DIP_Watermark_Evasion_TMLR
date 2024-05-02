@@ -38,7 +38,7 @@ def main(args):
 
         # === If you need the gt watermark and encoded watermark info ===
         watermark_gt_str = data_dict["watermark_gt_str"]
-        if watermark_gt_str[1] == "[":  # Some historical none distructive bug :( will cause this reformatting
+        if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
             watermark_gt_str = eval(data_dict["watermark_gt_str"])[0]
 
         # Process each inter. recon
