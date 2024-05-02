@@ -62,6 +62,7 @@ def main(args):
         
         # Save the result
         data_dict["watermark_decoded"] = watermark_decoded_log
+        data_dict["watermark_gt_str"] = watermark_gt_str
 
         save_name = os.path.join(save_root_dir, file_name)
         with open(save_name, 'wb') as handle:
