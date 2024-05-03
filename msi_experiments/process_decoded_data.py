@@ -6,18 +6,29 @@ dir_path = os.path.abspath("..")
 sys.path.append(dir_path)
 
 import argparse, pickle, os, cv2
+import numpy as np
 
 
 def main(args):
-    data_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, args.arch)
-    file_path = os.path.join(data_root_dir, "Img-1_hidden.pkl")
+    data_root_dir = os.path.join("Result-Decoded", args.watermarker, args.dataset, args.evade_method, args.arch)
+    file_path = os.path.join(data_root_dir, "Img-50.pkl")
 
     # Load Data
     with open(file_path, 'rb') as handle:
         data_dict = pickle.load(handle)
 
-    print("Shape Check: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-    print(data_dict["interm_recon"][0].shape)
+    a_gt = data_dict["watermark_gt_str"]
+    aa = data_dict["watermark_decoded"]
+    bb = data_dict["psnr_w"]
+
+    a = aa[-2]
+    log = []
+    for i in range(len(a_gt)):
+        if a_gt[i] == a[i]:
+            log.append(1)
+        else:
+            log.append(0)
+    bit_acc = np.mean(log)
     print()
 
 
@@ -26,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="StegaStamp"
+        default="dwtDctSvd"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 
@@ -48,7 +59,7 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="bmshj2018-factorized"
+        default="cheng2020-anchor"
     )
     args = parser.parse_args()
     main(args)
