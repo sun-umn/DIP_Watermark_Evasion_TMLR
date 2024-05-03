@@ -32,6 +32,7 @@ class VAEWMAttacker():
         img_rgb_float = uint8_to_float(img_rgb_uint8_np)
         img = np.transpose(img_rgb_float, [2, 0, 1])
         img = torch.from_numpy(img).unsqueeze(0).to(self.device, dtype=torch.float)
+        img = transforms.Resize((512, 512))(img)
         out = self.model(img)["x_hat"]
         out = torch.clamp(out, 0, 1)
 

@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd, SSL, SteganoGAN, StegaStamp]",
-        default="rivaGan"
+        default="StegaStamp"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, help="Dataset [COCO, DiffusionDB]",
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="diffuser"
+        default="vae"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="gaussian_noise"
+        default="cheng2020-anchor"
     )
     args = parser.parse_args()
     main(args)
