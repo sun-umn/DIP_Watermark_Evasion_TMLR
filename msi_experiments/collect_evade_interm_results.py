@@ -49,7 +49,7 @@ def main(args):
     evade_cfgs = CONFIGS[args.evade_method]
     
     # === Create Path to save exp results ===
-    log_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, evade_cfgs["arch"])
+    log_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, {}.format(evade_cfgs["arch"]))
     os.makedirs(log_root_dir, exist_ok=True)
 
     num_images = len(dataset)
