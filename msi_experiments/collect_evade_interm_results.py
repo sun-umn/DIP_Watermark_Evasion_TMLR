@@ -40,6 +40,10 @@ def main(args):
 
         "diffuser": {
             "arch": "dummy",  # No second option for diffusion model
+        },
+
+        "diffpure": {
+            "arch": 0.1,  # No need for second option for diffusion model
         }
     }
     evade_cfgs = CONFIGS[args.evade_method]
@@ -114,7 +118,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="vae"
+        default="diffpure"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -126,8 +130,9 @@ if __name__ == "__main__":
                 vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
+                diffpure --- 0.1  # Do not need other options for this benchmark
         """,
-        default="cheng2020-anchor"
+        default="0.1"
     )
     args = parser.parse_args()
     main(args)

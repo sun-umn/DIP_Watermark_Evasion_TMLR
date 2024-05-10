@@ -101,3 +101,26 @@ def diffpure_evation_single_img(
         "interm_recon": im_recon_bgr,
     }
     return return_log
+
+
+def diffpure_interm_collection(im_w_uint8_bgr, evader_cfg=None):
+    """
+        This function is used to collect all interm. results for large-scale dataset experiments.
+    """
+    assert evader_cfg is not None, "Must input corruption configs."
+
+    # Init diffuser
+    device = torch.device("cuda")
+    steps = evader_cfg["arch"]
+
+    # Init diffuser
+    evader = DiffPure(steps, device)
+
+    # Regnerate
+    im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+
+    return_log = {
+        "index": [0],
+        "interm_recon": [im_recon_bgr]
+    }
+    return return_log

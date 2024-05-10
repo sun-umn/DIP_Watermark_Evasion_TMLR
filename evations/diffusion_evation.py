@@ -161,7 +161,6 @@ def diffuser_interm_collection(im_w_uint8_bgr, evader_cfg=None):
     """
         This function is used to collect all interm. results for large-scale dataset experiments.
     """
-    assert evader_cfg is not None, "Must input corruption configs."
 
     # Init diffuser
     device = torch.device("cuda")

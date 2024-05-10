@@ -3,7 +3,7 @@ from .rp_evation import rp_evasion_single_img, rp_interm_collection
 from .vae_evation import vae_evasion_single_img, vae_interm_collection
 from .corrupters import corruption_evation_single_img, corruption_interm_collection
 from .diffusion_evation import diffuser_evation_single_img, diffuser_interm_collection
-from .diffpure import diffpure_evation_single_img
+from .diffpure import diffpure_evation_single_img, diffpure_interm_collection
 
 
 def get_evasion_alg(method_name, arch=None):
@@ -42,6 +42,8 @@ def get_interm_collection_algo(method_name, arch=None):
         method = corruption_interm_collection
     elif method_name.lower() == "diffuser":
         method = diffuser_interm_collection
+    elif method_name.lower() == "diffpure":
+        method = diffpure_interm_collection
     else:
         raise RuntimeError("Unsupported evasion method specified")
     
