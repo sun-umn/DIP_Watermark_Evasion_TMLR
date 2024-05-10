@@ -1,5 +1,5 @@
 
-from ..DiffPure.guided_diffusion.script_util import create_model_and_diffusion, model_and_diffusion_defaults
+from DiffPure.guided_diffusion.script_util import create_model_and_diffusion, model_and_diffusion_defaults
 import torch, argparse
 
 

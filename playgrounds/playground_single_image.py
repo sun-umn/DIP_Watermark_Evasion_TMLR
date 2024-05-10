@@ -90,6 +90,12 @@ def main(args):
             "arch": "dummy",
             "detection_threshold": detection_threshold,
             "verbose": True,
+        },
+
+        "diffpure":
+        {
+            "arch": 0.4,
+            "verbose": True,
         }
     }
     evader_cfgs = CONFIGS[args.evade_method]
@@ -120,7 +126,7 @@ def main(args):
     elif args.evade_method.lower() == "corrupters":
         print("Use - {} - post-processing: ".format(evader_cfgs["arch"]))
         plot_corruption_res(vis_root_dir, evasion_res, detection_threshold, method_name=evader_cfgs["arch"])
-    elif args.evade_method.lower() == "diffuser":
+    elif args.evade_method.lower() in ["diffuser", "diffpure"]:
         plot_diffuser_res(vis_root_dir, evasion_res)
     else:
         raise RuntimeError("Un-implemented result summary")
@@ -154,7 +160,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="vae"
+        default="diffpure"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -166,8 +172,9 @@ if __name__ == "__main__":
                 vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
+                diffpure --- [0.1, 0.2, 0.4] representing the step params
         """,
-        default="cheng2020-anchor"
+        default="0.1"
     )
     parser.add_argument(
         "--detection_threshold", dest="detection_threshold", type=float, default=0.75,
