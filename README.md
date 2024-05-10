@@ -23,7 +23,6 @@ Then, install the dependencies by:
 ```bash
 pip install -r requirement.txt
 ```
-Note that ```compressai``` probably doesn't work on Windows. If you happend to own a windows machine, try using WSL2 and with C++ compliler installed. If you love Windows OS so much, you may have to trace the code and comment out the parts that uses ```compressai```, which will only affects the runability of certain baseline methods (vae generators to be specific).
 
 Finally, run the following command to install the modified [diffusers](https://github.com/huggingface/diffusers) to implement the regeneration attack proposed in [Invisible Image Watermarks Are Provably Removable Using Generative AI](https://arxiv.org/abs/2306.01953).
 
@@ -31,7 +30,7 @@ Finally, run the following command to install the modified [diffusers](https://g
 pip install -e .
 ```
 
-### Set up the benchmark from DiffPure
+### Set up the benchmark from DiffPure from the Official Repo
 
 To config the DiffPure method from [Robustness of AI-Image Detectors: Fundamental Limits and Practical Attacks](https://arxiv.org/pdf/2310.00076), first clone the [official repo](https://github.com/mehrdadsaberi/watermark_robustness.git) to PATH_THAT_YOU_LIKE:
 
@@ -49,16 +48,24 @@ cd watermark_robustness
 bash _bash_download_models.sh
 ```
 
-Finally copy the entire folder of DiffPure into this repo:
+Then the entire folder of DiffPure into this repo:
 
 ```bash
 cp -r DiffPure DIP_Watermark_Evasion/
 ```
+
+
+### Troubleshoot for compressai installation
+
+If you have trouble installing ```compressai```, you may trace the code and comment out the parts that uses ```compressai```, which will only affects the vae regeneration benchmarks but not other methods.
+
 
 ## Acknowledgement
 
 Most baseline methods are largely adapted from paper [Invisible Image Watermarks Are Provably Removable Using Generative AI](https://arxiv.org/abs/2306.01953) and their public [code](https://github.com/XuandongZhao/WatermarkAttacker/tree/main).
 
 Baseline "WeVadeBQ" is adapted from paper [Evading Watermark based Detection of AI-Generated Content](https://arxiv.org/abs/2305.03807) and their public [code](https://github.com/zhengyuan-jiang/WEvade).
+
+Only ways to pack the DiffPure method from [Robustness of AI-Image Detectors: Fundamental Limits and Practical Attacks](https://arxiv.org/pdf/2310.00076) is provided in this project for convenience. Check the [official repo (full version)](https://github.com/mehrdadsaberi/watermark_robustness.git) for other methods they have proposed.
 
 Special thanks to the original authors and their hard work!
