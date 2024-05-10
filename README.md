@@ -23,9 +23,6 @@ Then, install the dependencies by:
 ```bash
 pip install -r requirement.txt
 ```
-
-### A note for compressai
-
 Note that ```compressai``` probably doesn't work on Windows. If you happend to own a windows machine, try using WSL2 and with C++ compliler installed. If you love Windows OS so much, you may have to trace the code and comment out the parts that uses ```compressai```, which will only affects the runability of certain baseline methods (vae generators to be specific).
 
 Finally, run the following command to install the modified [diffusers](https://github.com/huggingface/diffusers) to implement the regeneration attack proposed in [Invisible Image Watermarks Are Provably Removable Using Generative AI](https://arxiv.org/abs/2306.01953).
