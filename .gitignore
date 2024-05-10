@@ -6,6 +6,7 @@ dataset/examples/COCO
 dataset/examples/DiffusionDB
 Result-*
 slurm*
+DiffPure/*
 
 # === Standard build files ====
 
