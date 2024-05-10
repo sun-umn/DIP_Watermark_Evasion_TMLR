@@ -256,8 +256,8 @@ def main(args):
     print("Total num. of images: {}".format(num_images))
     print("Interm. collection started ...")
 
-    # for idx in range(num_images):
-    for idx in range(2):
+    for idx in range(90, num_images):
+    # for idx in range(2):
         sample_data = dataset[idx]
 
         watermark_gt_str = eval(sample_data["watermark_gt_str"])[0]

@@ -13,7 +13,7 @@ class DiffPure():
     """
         Diffpure watermark evasion.
     """
-    def __init__(self, steps=0.4, device=torch.device("cuda")):
+    def __init__(self, steps=0.4, device=torch.device("cuda"), is_stega=False):
         with open('DiffPure/configs/imagenet.yml', 'r') as f:
             config = yaml.safe_load(f)
         self.config = dict2namespace(config)
@@ -21,6 +21,7 @@ class DiffPure():
         self.steps = steps
         self.device = device
         self.runner.eval()
+        self.is_stega = is_stega
 
     def forward(self, img):
         img_pured, img_noisy = self.runner.image_editing_sample((img.unsqueeze(0) - 0.5) * 2)
@@ -38,7 +39,12 @@ class DiffPure():
             NOTE: Although the diffpure model is trained on img resolution 256,
                   the denoise diffuser itself works on 512 resolution too, there's no need for reshaping.
         """
-        im_w_bgr_reshaped = im_w_bgr_uint8
+        if not self.is_stega:
+            im_w_bgr_reshaped = im_w_bgr_uint8
+        else:
+            # unfortunately this diffpure cannot work with 400 resolution
+            im_w_bgr_reshaped = cv2.resize(im_w_bgr_uint8, (512, 512), interpolation=cv2.INTER_LINEAR)
+
         img = uint8_to_float(bgr2rgb(im_w_bgr_reshaped))  # [0, 1] np.float32
         img_tensor = img_np_to_tensor(img).squeeze(0).to(self.device)     # [0, 1] torch.tensor
         img_pured = self.forward(img_tensor)
@@ -46,7 +52,10 @@ class DiffPure():
         img_pured_np_float = img_pured.numpy()
         img_pured_bgr_uint8 = rgb2bgr(np.transpose(float_to_uint8(img_pured_np_float), [1, 2, 0]))
 
-        img_pured_bgr = img_pured_bgr_uint8
+        if not self.is_stega:
+            img_pured_bgr = img_pured_bgr_uint8
+        else:
+            img_pured_bgr = cv2.resize(img_pured_bgr_uint8, (400, 400), interpolation=cv2.INTER_AREA)
         return img_pured_bgr
 
     def regenerate_from_path(self, im_w_path):
@@ -112,9 +121,10 @@ def diffpure_interm_collection(im_w_uint8_bgr, evader_cfg=None):
     # Init diffuser
     device = torch.device("cuda")
     steps = evader_cfg["arch"]
+    is_stega = evader_cfg["is_stegastamp"]
 
     # Init diffuser
-    evader = DiffPure(steps, device)
+    evader = DiffPure(steps, device, is_stega)
 
     # Regnerate
     im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
