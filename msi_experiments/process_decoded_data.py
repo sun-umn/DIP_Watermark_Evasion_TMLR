@@ -15,10 +15,12 @@ from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 
 def calc_bitwise_acc(gt_str, decoded_str):
     correct, total = 0., 0.
-    for i in range(len(gt_str)):
+    for i in range(min(len(gt_str), len(decoded_str))):
         if gt_str[i] == decoded_str[i]:
             correct = correct + 1.
         total = total + 1.
+    if len(gt_str) != len(decoded_str):
+        total += abs(len(gt_str) - len(decoded_str))
     return correct / total
 
 
@@ -45,20 +47,22 @@ def main(args):
     for file_name in file_names:
         file_path = os.path.join(data_root_dir, file_name)
 
-        
-
         # (1) Retrieve the im_w name
-        im_w_file_name = file_name.replace(".pkl", ".png")
-        if "_hidden" in im_w_file_name:
-            im_orig_name = im_w_file_name.replace("_hidden", "")
+        im_orig_name = file_name.replace(".pkl", ".png")
+        if args.watermarker == "StegaStamp":
+            im_w_file_name = im_orig_name.replace(".png", "_hidden.png")
         else:
-            im_orig_name = im_w_file_name
+            im_w_file_name = im_orig_name
+
         # Readin the im_w into bgr uint8 format
         im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
         im_w_bgr_uint8 = cv2.imread(im_w_path)
         # Readin im_orig and im_w and calculate this psnr 
         im_orig_path = os.path.join(im_orig_root_dir, im_orig_name)
         im_orig_bgr_uint8 = cv2.imread(im_orig_path)
+
+        if args.watermarker == "StegaStamp":
+            im_orig_bgr_uint8 = cv2.resize(im_orig_bgr_uint8, (400, 400), interpolation=cv2.INTER_AREA)
         psnr_w_to_orig = compute_psnr(
             im_orig_bgr_uint8.astype(np.int16), im_w_bgr_uint8.astype(np.int16), data_range=255
         )
@@ -83,7 +87,8 @@ def main(args):
         # === Calc bitwise acc ===
         bitwise_acc_log = []
         for i in range(num_interm_data):
-            bitwise_acc = calc_bitwise_acc(watermark_gt_str, watermark_decoded_str[i])
+            watermark_decoded = str(watermark_decoded_str[i])
+            bitwise_acc = calc_bitwise_acc(watermark_gt_str, watermark_decoded)
             bitwise_acc_log.append(bitwise_acc)
 
         # === To finde the best evade Iter ===
@@ -94,7 +99,8 @@ def main(args):
             psnr_orig = psnr_orig_log[idx]
             bitwise_acc = bitwise_acc_log[idx]
 
-            condition_1 = (1-detection_threshold) < bitwise_acc < detection_threshold
+            # condition_1 = (1-detection_threshold) < bitwise_acc < detection_threshold
+            condition_1 = bitwise_acc < detection_threshold
             condition_2 = psnr_w > best_psnr_w
             if condition_1 and condition_2:
                 best_index = index_log[idx]
@@ -112,7 +118,7 @@ def main(args):
             best_psnr_orig_log.append(best_psnr_orig)
             evade_success_log.append(1)
 
-        # # === Sanity Check === Plot the psnr and bitwise acc curve
+        # === Sanity Check === Plot the psnr and bitwise acc curve
         # fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
         # ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
         # ax[0].plot(index_log, psnr_w_log, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
@@ -163,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="dwtDctSvd"
+        default="StegaStamp"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 
@@ -172,7 +178,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="corrupters"
+        default="dip"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -185,19 +191,19 @@ if __name__ == "__main__":
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
         """,
-        default="jpeg"
+        default="vanila"
     )
     args = parser.parse_args()
-    main(args)
+    # main(args)
 
-    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
-    # corrupter_names = [f for f in os.listdir(root_lv1)]
-    # for corrupter in corrupter_names:
-    #     root_lv2 = os.path.join(root_lv1, corrupter)
-    #     arch_names = [f for f in os.listdir(root_lv2)]
-    #     for arch in arch_names:
-    #         args.evade_method = corrupter
-    #         args.arch = arch
-    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-    #         main(args)
+    root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    corrupter_names = [f for f in os.listdir(root_lv1)]
+    for corrupter in corrupter_names:
+        root_lv2 = os.path.join(root_lv1, corrupter)
+        arch_names = [f for f in os.listdir(root_lv2)]
+        for arch in arch_names:
+            args.evade_method = corrupter
+            args.arch = arch
+            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+            main(args)
     print("Completed.")
