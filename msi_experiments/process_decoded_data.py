@@ -78,7 +78,7 @@ def main(args):
         psnr_w_log = data_dict["psnr_w"]
 
         num_interm_data = len(psnr_w_log)
-        print("Total number of interm data: {}".format(num_interm_data))
+        # print("Total number of interm data: {}".format(num_interm_data))
 
         # === Calc bitwise acc ===
         bitwise_acc_log = []
@@ -100,10 +100,10 @@ def main(args):
                 best_index = index_log[idx]
                 best_psnr_w = psnr_w
                 best_psnr_orig = psnr_orig
-        print("Best evade iter [{}] with PSNR-W [{}] & PSNR-orig [{}]".format(best_index, best_psnr_w, best_psnr_orig))
+        # print("Best evade iter [{}] with PSNR-W [{}] & PSNR-orig [{}]".format(best_index, best_psnr_w, best_psnr_orig))
 
         if best_index is None:
-            print("Does not evade successfully")
+            # print("Does not evade successfully")
             # best_psnr_w_log = []
             # best_psnr_orig_log = []
             evade_success_log.append(0)
@@ -155,9 +155,8 @@ def main(args):
     with open(save_file_name, 'wb') as handle:
         pickle.dump(save_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print("Decoded Interm. result saved to {}".format(save_file_name))
+    print("=========================================================== \n")
         
-        
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
