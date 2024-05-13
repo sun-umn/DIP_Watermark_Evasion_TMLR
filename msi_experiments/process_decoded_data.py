@@ -118,7 +118,7 @@ def main(args):
             best_psnr_orig_log.append(best_psnr_orig)
             evade_success_log.append(1)
 
-        # === Sanity Check === Plot the psnr and bitwise acc curve
+        # # === Sanity Check === Plot the psnr and bitwise acc curve
         # fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
         # ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
         # ax[0].plot(index_log, psnr_w_log, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
@@ -190,6 +190,7 @@ if __name__ == "__main__":
                 vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
+                diffpure --- ["0.1", "0.2", "0.3"]
         """,
         default="vanila"
     )
