@@ -43,7 +43,7 @@ def main(args):
         },
 
         "diffpure": {
-            "arch": 0.1,  # No need for second option for diffusion model
+            "arch": args.arch,  # No need for second option for diffusion model
             "is_stegastamp": is_stegastamp
         }
     }
