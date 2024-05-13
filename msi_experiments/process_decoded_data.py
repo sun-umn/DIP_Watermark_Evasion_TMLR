@@ -145,10 +145,10 @@ def main(args):
     evade_success_rate = np.mean(evade_success_log)
     print("===== Processed Summary: Watermarker [{}] - Dataset [{}] =====".format(args.watermarker, args.dataset))
     print("PSNR ot orig: Mean {:03f} - std({:03f})".format(mean_psnr_w_to_orig, std_psnr_w_to_orig))
-    print("Best PSNR-W: Mean - STD: ")
-    print("  [{:03f}] - [{:03f}]".format(mean_psnr_w, std_psnr_w))
     print("Best PSNR-Orig: Mean - STD: ")
     print("  [{:03f}] - [{:03f}]".format(mean_psnr_orig, std_psnr_orig))
+    print("Best PSNR-W: Mean - STD: ")
+    print("  [{:03f}] - [{:03f}]".format(mean_psnr_w, std_psnr_w))
     print("Evasion success rate: {:.03f} %".format(evade_success_rate * 100))
 
     # === Save processed data ===

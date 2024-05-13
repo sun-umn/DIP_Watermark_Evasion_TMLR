@@ -64,7 +64,10 @@ def main(args):
         im_orig_bgr_uint8 = cv2.imread(im_orig_path)
         
         # Get the reconstructed data from the interm. result
-        img_recon_list = data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
+        if args.evade_method == "WevadeBQ":
+            img_recon_list = data_dict["best_recon"]
+        else:
+            img_recon_list = data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
         n_recon = len(img_recon_list)
         print("Total number of interm. recon. to process: [{}]".format(n_recon))
 
