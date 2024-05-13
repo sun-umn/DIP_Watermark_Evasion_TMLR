@@ -1,7 +1,5 @@
-import argparse, cv2, yaml, torch
+import cv2, yaml, torch
 import numpy as np
-from argparse import ArgumentParser
-from torchvision import transforms
 from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 from utils.diffpure_utils import GuidedDiffusion, dict2namespace
 from utils.general import uint8_to_float, float_to_uint8, img_np_to_tensor, \
@@ -17,7 +15,7 @@ class DiffPure():
         with open('DiffPure/configs/imagenet.yml', 'r') as f:
             config = yaml.safe_load(f)
         self.config = dict2namespace(config)
-        self.runner = GuidedDiffusion(self.config, t = int(steps * int(self.config.model.timestep_respacing)), model_dir = 'DiffPure/pretrained/guided_diffusion')
+        self.runner = GuidedDiffusion(self.config, t = int(steps * int(self.config.model.timestep_respacing)), model_dir='DiffPure/pretrained/guided_diffusion')
         self.steps = steps
         self.device = device
         self.runner.eval()
