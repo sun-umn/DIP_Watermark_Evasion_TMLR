@@ -43,7 +43,7 @@ def main(args):
         },
 
         "diffpure": {
-            "arch": float(args.arch),  # No need for second option for diffusion model
+            "arch": args.arch,  # No need for second option for diffusion model
             "is_stegastamp": is_stegastamp
         }
     }
@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
                 corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
                 diffuser --- Do not need.
-                diffpure --- 0.1  # Do not need other options for this benchmark
+                diffpure --- dummy
         """,
         default="0.1"
     )

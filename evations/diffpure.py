@@ -118,17 +118,24 @@ def diffpure_interm_collection(im_w_uint8_bgr, evader_cfg=None):
 
     # Init diffuser
     device = torch.device("cuda")
-    steps = evader_cfg["arch"]
+    steps = np.arange(1, 100, 5) / 100.
     is_stega = evader_cfg["is_stegastamp"]
 
     # Init diffuser
-    evader = DiffPure(steps, device, is_stega)
+    index_log = []
+    interm_recon_log = []
+    for step in steps:
+        evader = DiffPure(step, device, is_stega)
 
-    # Regnerate
-    im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+        # Regnerate
+        im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+
+        # Append result
+        index_log.append(step)
+        interm_recon_log.append(im_recon_bgr)
 
     return_log = {
-        "index": [0],
-        "interm_recon": [im_recon_bgr]
+        "index": index_log,
+        "interm_recon": interm_recon_log
     }
     return return_log
