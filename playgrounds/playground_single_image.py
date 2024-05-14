@@ -153,7 +153,6 @@ if __name__ == "__main__":
         "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
         default=os.path.join("examples", "watermarked_imgs")
     )
-
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method.",
         default="rivaGan"
