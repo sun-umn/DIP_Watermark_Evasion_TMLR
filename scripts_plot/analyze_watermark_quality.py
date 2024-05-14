@@ -87,7 +87,7 @@ def main(args):
         l1 = ax[ax_idx].vlines(x=quantile, ymin=0.1, ymax=1e6, ls="dashed", color="black", label=r"$90 \% ~ quantile ~ (x = {:.1f})$".format(quantile))
         ax[ax_idx].yaxis.grid(True)
         ax[ax_idx].xaxis.grid(False)
-        ax[ax_idx].set_yticks([1e1, 1e5])
+        ax[ax_idx].set_yticks([1e2, 1e5])
         ax[ax_idx].tick_params(axis='y', labelsize=15)
         ax[ax_idx].set_xticks([max_value])
         ax[ax_idx].tick_params(axis='x', labelsize=15)
