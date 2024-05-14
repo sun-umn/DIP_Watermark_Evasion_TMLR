@@ -67,6 +67,10 @@ def main(args):
         print(watermarker, q_mean, q_std)
 
 
+    # === Plot Histogram of Img-1 to visualize the err-pixel distribution ===
+    
+    
+
 if __name__ == "__main__": 
     
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
