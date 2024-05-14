@@ -20,6 +20,7 @@ class DiffPure():
         self.device = device
         self.runner.eval()
         self.is_stega = is_stega
+        print(f'DiffPure with noise step {self.steps}')
 
     def forward(self, img):
         img_pured, img_noisy = self.runner.image_editing_sample((img.unsqueeze(0) - 0.5) * 2)
@@ -118,7 +119,7 @@ def diffpure_interm_collection(im_w_uint8_bgr, evader_cfg=None):
 
     # Init diffuser
     device = torch.device("cuda")
-    steps = np.arange(1, 100, 5) / 100.
+    steps = np.arange(5, 121, 5) / 100.
     is_stega = evader_cfg["is_stegastamp"]
 
     # Init diffuser

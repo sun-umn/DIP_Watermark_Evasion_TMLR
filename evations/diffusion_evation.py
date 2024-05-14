@@ -164,18 +164,28 @@ def diffuser_interm_collection(im_w_uint8_bgr, evader_cfg=None):
 
     # Init diffuser
     device = torch.device("cuda")
+    steps = np.arange(5, 121, 5)
+
     pipe = ReSDPipeline.from_pretrained("stabilityai/stable-diffusion-2-1", torch_dtype=torch.float16, revision="fp16")
     pipe.set_progress_bar_config(disable=True)
     pipe.to(device)
     print('Finished loading model')
-    evader = DiffWMAttacker(pipe)
 
-    # Regnerate
-    im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+    index_log = []
+    interm_recon_log = []
+    for step in steps:
+        evader = DiffWMAttacker(pipe, noise_step=step)
+
+        # Regnerate
+        im_recon_bgr = evader.regenerate(im_w_uint8_bgr)
+
+        # Append result
+        index_log.append(step)
+        interm_recon_log.append(im_recon_bgr)
 
     return_log = {
-        "index": [0],
-        "interm_recon": [im_recon_bgr]
+        "index": index_log,
+        "interm_recon": interm_recon_log
     }
     return return_log
 
