@@ -119,7 +119,7 @@ def diffpure_interm_collection(im_w_uint8_bgr, evader_cfg=None):
 
     # Init diffuser
     device = torch.device("cuda")
-    steps = np.arange(5, 121, 5) / 100.
+    steps = np.arange(10, 105, 10) / 100.
     is_stega = evader_cfg["is_stegastamp"]
 
     # Init diffuser

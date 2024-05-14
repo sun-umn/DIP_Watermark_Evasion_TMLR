@@ -164,7 +164,7 @@ def diffuser_interm_collection(im_w_uint8_bgr, evader_cfg=None):
 
     # Init diffuser
     device = torch.device("cuda")
-    steps = np.arange(5, 121, 5)
+    steps = np.arange(10, 101, 10)
 
     pipe = ReSDPipeline.from_pretrained("stabilityai/stable-diffusion-2-1", torch_dtype=torch.float16, revision="fp16")
     pipe.set_progress_bar_config(disable=True)
