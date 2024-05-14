@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="StegaStamp"
+        default="dwtDctSvd"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="dip"
+        default="corrupters"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -192,19 +192,19 @@ if __name__ == "__main__":
                 diffuser --- Do not need.
                 diffpure --- ["0.1", "0.2", "0.3"]
         """,
-        default="vanila"
+        default="gaussian_noise"
     )
     args = parser.parse_args()
-    # main(args)
+    main(args)
 
-    root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
-    corrupter_names = [f for f in os.listdir(root_lv1)]
-    for corrupter in corrupter_names:
-        root_lv2 = os.path.join(root_lv1, corrupter)
-        arch_names = [f for f in os.listdir(root_lv2)]
-        for arch in arch_names:
-            args.evade_method = corrupter
-            args.arch = arch
-            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-            main(args)
+    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    # corrupter_names = [f for f in os.listdir(root_lv1)]
+    # for corrupter in corrupter_names:
+    #     root_lv2 = os.path.join(root_lv1, corrupter)
+    #     arch_names = [f for f in os.listdir(root_lv2)]
+    #     for arch in arch_names:
+    #         args.evade_method = corrupter
+    #         args.arch = arch
+    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+    #         main(args)
     print("Completed.")
