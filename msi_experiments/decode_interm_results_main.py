@@ -152,33 +152,34 @@ if __name__ == "__main__":
         help="Dataset [COCO, DiffusionDB]",
         default="COCO"
     )
-    # parser.add_argument(
-    #     "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-    #     default="vae"
-    # )
-    # parser.add_argument(
-    #     "--arch", dest="arch", type=str, 
-    #     help="""
-    #         Secondary specification of evasion method (if there are other choices).
+    parser.add_argument(
+        "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
+        default="vae"
+    )
+    parser.add_argument(
+        "--arch", dest="arch", type=str, 
+        help="""
+            Secondary specification of evasion method (if there are other choices).
 
-    #         Valid values a listed below:
-    #             dip --- ["vanila", "random_projector"],
-    #             vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
-    #             corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
-    #             diffuser --- Do not need.
-    #     """,
-    #     default="cheng2020-anchor"
-    # )
+            Valid values a listed below:
+                dip --- ["vanila", "random_projector"],
+                vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
+                corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
+                diffuser --- Do not need.
+        """,
+        default="cheng2020-anchor"
+    )
     args = parser.parse_args()
+    main(args)
     
-    root_lv1 = os.path.join("Result-Interm", args.watermarker, args.dataset)
-    corrupter_names = [f for f in os.listdir(root_lv1)]
-    for corrupter in corrupter_names:
-        root_lv2 = os.path.join(root_lv1, corrupter)
-        arch_names = [f for f in os.listdir(root_lv2)]
-        for arch in arch_names:
-            args.evade_method = corrupter
-            args.arch = arch
-            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-            main(args)
+    # root_lv1 = os.path.join("Result-Interm", args.watermarker, args.dataset)
+    # corrupter_names = [f for f in os.listdir(root_lv1)]
+    # for corrupter in corrupter_names:
+    #     root_lv2 = os.path.join(root_lv1, corrupter)
+    #     arch_names = [f for f in os.listdir(root_lv2)]
+    #     for arch in arch_names:
+    #         args.evade_method = corrupter
+    #         args.arch = arch
+    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+    #         main(args)
     print("\n***** Completed. *****\n")
