@@ -19,7 +19,7 @@ from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 
 # =====
 from watermarkers import get_watermarkers
-from utils.general import watermark_str_to_numpy, watermark_np_to_str, uint8_to_float
+from utils.general import watermark_str_to_numpy, watermark_np_to_str, uint8_to_float, compute_ssim
 
 
 def calc_mse(img_1_bgr_uint8, img_2_bgr_uint8):
@@ -89,6 +89,8 @@ def main(args):
         mse_orig_log = []
         psnr_w_log = []
         mse_w_log = []
+        ssim_orig_log = []
+        ssim_w_log = []
         for img_idx in range(n_recon):
             img_bgr_uint8 = img_recon_list[img_idx]    # shape [512, 512, 3]
             if args.watermarker == "StegaStamp" and args.arch in ["cheng2020-anchor", "mbt2018"]:
@@ -118,20 +120,32 @@ def main(args):
             psnr_recon_w = compute_psnr(
                 im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
             )
+            ssim_recon_orig = compute_ssim(
+                im_orig_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+            )
+            ssim_recon_w = compute_ssim(
+                im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+            )
+
+            
             mse_orig_log.append(mse_recon_orig)
             mse_w_log.append(mse_recon_w)
             psnr_orig_log.append(psnr_recon_orig)
             psnr_w_log.append(psnr_recon_w)
+            ssim_orig_log.append(ssim_recon_orig)
+            ssim_w_log.append(ssim_recon_w)
 
         # Save the result
         processed_dict = {
             "index": index_log,
             "watermark_gt_str": watermark_gt_str, # Some historical none distructive bug :( will cause this reformatting
             "watermark_decoded": watermark_decoded_log,
-            "mse_orig": mse_orig_log,
+            # "mse_orig": mse_orig_log,
             "psnr_orig": psnr_orig_log,
-            "mse_w": mse_w_log,
-            "psnr_w": psnr_w_log
+            "ssim_orig": ssim_orig_log,
+            # "mse_w": mse_w_log,
+            "psnr_w": psnr_w_log,
+            "ssim_w": ssim_w_log
         }
 
         save_name = os.path.join(save_root_dir, file_name)

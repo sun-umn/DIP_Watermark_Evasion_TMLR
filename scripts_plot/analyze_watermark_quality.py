@@ -4,11 +4,21 @@ sys.path.append(dir_path)
 dir_path = os.path.abspath("..")
 sys.path.append(dir_path)
 import math, torch, cv2, argparse
+from pytorch_msssim import ssim, ms_ssim
+from skimage.metrics import peak_signal_noise_ratio as compute_psnr
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme()
+
+
+def compute_ssim(a, b, data_range):
+    a = np.transpose(a, [2, 0, 1])
+    a = torch.from_numpy(a).to(dtype=torch.float).unsqueeze(0)
+    b = np.transpose(b, [2, 0, 1])
+    b = torch.from_numpy(b).to(dtype=torch.float).unsqueeze(0)
+    return ssim(a, b, data_range=data_range).item()
 
 
 watermarkers = [
@@ -24,9 +34,13 @@ def main(args):
     dataset = args.dataset
     histo_dict = {}
     quantile_dict = {}
+    ssim_dict = {}
+    psnr_dict = {}
     for watermarker in watermarkers:
         histo_dict[watermarker] = []
         quantile_dict[watermarker] = []
+        ssim_dict[watermarker] = []
+        psnr_dict[watermarker] = []
 
     max_value = 0 
     for i in range(1, 100, 1):
@@ -52,6 +66,16 @@ def main(args):
                 else:
                     img_clean = im_clean_bgr_int
 
+                # === Compute PSNR ===
+                psnr_orig_w = compute_psnr(
+                    img_clean, im_w_bgr_int, data_range=255  # PSNR of recon v.s. watermarked img
+                )   
+                psnr_dict[watermarker].append(psnr_orig_w)
+                # === Compute SSIM ===
+                ssim_orig_w = compute_ssim(img_clean, im_w_bgr_int, data_range=255)
+                ssim_dict[watermarker].append(ssim_orig_w)
+
+                # === Compute quantile measure ===
                 err_values = np.abs(im_w_bgr_int - img_clean).flatten()
                 max_value_0 = np.amax(err_values)
                 counts, bins = np.histogram(err_values, bins=(max_value_0+1))
@@ -62,17 +86,22 @@ def main(args):
                 histo_dict[watermarker].append((counts, bins))
                 quantile_dict[watermarker].append(quantile)
 
-        # histo_dict[watermarker] = (counts, bins)
-        # quantile_dict[watermarker] = quantile
-        # print(watermarker, np.amax(bins), quantile)
-        # print()
 
-    print("Watermark - Mean - STD")
+    
     for watermarker in watermarkers:
+        print("Watermark {} quality measures: ".format(watermarker))
         quantiles = quantile_dict[watermarker]
         # print("{} - len data {}".format(watermarker, len(quantiles)))
         q_mean, q_std = np.mean(quantiles), np.std(quantiles)
-        print("{} - {:.03f} - {:.03f}".format(watermarker, q_mean, q_std))
+        print("  Quantile (90 %) measure: Mean [{:.02f}] - std [{:.02f}]".format(q_mean, q_std))
+
+        psnrs = psnr_dict[watermarker]
+        psnr_mean, psnr_std = np.mean(psnrs), np.std(psnrs)
+        print("  PSNR: Mean [{:.02f}] - std [{:.02f}]".format(psnr_mean, psnr_std))
+
+        ssims = ssim_dict[watermarker]
+        ssim_mean, ssim_std = np.mean(ssims), np.std(ssims)
+        print("  SSIM: Mean [{:.02f}] - std [{:.02f}]".format(ssim_mean, ssim_std))
 
     # === Vis: Plot histograms (of Img-1) to visualize the err-pixel distribution of different watermark methods ===
     num_figs = len(watermarkers)

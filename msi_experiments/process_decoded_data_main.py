@@ -41,6 +41,8 @@ def main(args):
     psnr_w_to_orig_log = []
     best_psnr_w_log = []
     best_psnr_orig_log = []
+    best_ssim_w_log = []
+    best_ssim_orig_log = []
     evade_success_log = []
     
     # Collect all interm. results and calc. necessary metrics
@@ -76,10 +78,12 @@ def main(args):
         index_log = data_dict["index"]
         watermark_gt_str = data_dict["watermark_gt_str"]
         watermark_decoded_str = data_dict["watermark_decoded"]
-        mse_orig_log = data_dict["mse_orig"]
-        mse_w_log = data_dict["mse_w"]
         psnr_orig_log = data_dict["psnr_orig"]
         psnr_w_log = data_dict["psnr_w"]
+        # === Added ===
+        ssim_orig_log = data_dict["ssim_orig"]
+        ssim_w_log = data_dict["ssim_w"]
+        
 
         num_interm_data = len(psnr_w_log)
         # print("Total number of interm data: {}".format(num_interm_data))
@@ -92,12 +96,14 @@ def main(args):
             bitwise_acc_log.append(bitwise_acc)
 
         # === To finde the best evade Iter ===
-        best_index, best_psnr_w, best_psnr_orig = None, -float("inf"), None
+        best_index, best_psnr_w, best_psnr_orig, best_ssim_orig, best_ssim_w = None, -float("inf"), None, None, None
         detection_threshold = 0.75
         for idx in range(num_interm_data-1, -1, -1):
             psnr_w = psnr_w_log[idx]
             psnr_orig = psnr_orig_log[idx]
             bitwise_acc = bitwise_acc_log[idx]
+            ssim_w = ssim_w_log[idx]
+            ssim_orig = ssim_orig_log[idx]
 
             # condition_1 = (1-detection_threshold) < bitwise_acc < detection_threshold
             condition_1 = bitwise_acc < detection_threshold
@@ -106,6 +112,8 @@ def main(args):
                 best_index = index_log[idx]
                 best_psnr_w = psnr_w
                 best_psnr_orig = psnr_orig
+                best_ssim_w = ssim_w
+                best_ssim_orig = ssim_orig
         # print("Best evade iter [{}] with PSNR-W [{}] & PSNR-orig [{}]".format(best_index, best_psnr_w, best_psnr_orig))
 
         if best_index is None:
@@ -116,6 +124,8 @@ def main(args):
         else:
             best_psnr_w_log.append(best_psnr_w)
             best_psnr_orig_log.append(best_psnr_orig)
+            best_ssim_w_log.append(best_ssim_w)
+            best_ssim_orig_log.append(best_ssim_orig)
             evade_success_log.append(1)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
@@ -141,12 +151,16 @@ def main(args):
     # === Summarize Data ===
     mean_psnr_w, std_psnr_w = np.mean(best_psnr_w_log), np.std(best_psnr_w_log)
     mean_psnr_orig, std_psnr_orig = np.mean(best_psnr_orig_log), np.std(best_psnr_orig_log)
+    mean_ssim_w, std_ssim_w = np.mean(best_ssim_w_log), np.std(best_ssim_w_log)
+    mean_ssim_orig, std_ssim_orig = np.mean(best_ssim_orig_log), np.std(best_ssim_orig_log)
     mean_psnr_w_to_orig, std_psnr_w_to_orig = np.mean(psnr_w_to_orig_log), np.std(psnr_w_to_orig_log)
     evade_success_rate = np.mean(evade_success_log)
     print("===== Processed Summary: Watermarker [{}] - Dataset [{}] =====".format(args.watermarker, args.dataset))
     print("PSNR ot orig: Mean {:.02f} - std({:.02f})".format(mean_psnr_w_to_orig, std_psnr_w_to_orig))
     print("Best PSNR-Orig: Mean - STD: ")
     print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_orig, std_psnr_orig))
+    print("Best SSIM-Orig: Mean - STD: ")
+    print("  [{:.02f}] - [{:.02f}]".format(mean_ssim_orig, std_ssim_orig))
     print("Best PSNR-W: Mean - STD: ")
     print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_w, std_psnr_w))
     print("Evasion success rate: {:.03f} %".format(evade_success_rate * 100))
@@ -156,6 +170,7 @@ def main(args):
         "psnr_w_to_orig": psnr_w_to_orig_log,
         "best_psnr_w": best_psnr_w_log,
         "best_psnr_orig": best_psnr_orig_log,
+        "best_ssim_orig": best_ssim_orig_log,
         "evade_success_rate": np.mean(evade_success_log)
     }
     with open(save_file_name, 'wb') as handle:

@@ -136,3 +136,14 @@ def bytearray_to_bits(x):
         bits = '00000000'[len(bits):] + bits
         result.extend([int(b) for b in bits])
     return result
+
+
+def compute_ssim(a, b, data_range):
+    """
+        Compute the ssim score from 2 cv2 image in np.array.
+    """
+    a = np.transpose(a, [2, 0, 1])
+    a = torch.from_numpy(a).to(dtype=torch.float).unsqueeze(0)
+    b = np.transpose(b, [2, 0, 1])
+    b = torch.from_numpy(b).to(dtype=torch.float).unsqueeze(0)
+    return ssim(a, b, data_range=data_range).item()
