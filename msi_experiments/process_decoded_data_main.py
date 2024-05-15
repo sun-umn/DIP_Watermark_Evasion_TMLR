@@ -81,8 +81,8 @@ def main(args):
         psnr_orig_log = data_dict["psnr_orig"]
         psnr_w_log = data_dict["psnr_w"]
         # === Added ===
-        ssim_orig_log = data_dict["ssim_orig"]
-        ssim_w_log = data_dict["ssim_w"]
+        # ssim_orig_log = data_dict["ssim_orig"]
+        # ssim_w_log = data_dict["ssim_w"]
         
 
         num_interm_data = len(psnr_w_log)
@@ -102,8 +102,8 @@ def main(args):
             psnr_w = psnr_w_log[idx]
             psnr_orig = psnr_orig_log[idx]
             bitwise_acc = bitwise_acc_log[idx]
-            ssim_w = ssim_w_log[idx]
-            ssim_orig = ssim_orig_log[idx]
+            # ssim_w = ssim_w_log[idx]
+            # ssim_orig = ssim_orig_log[idx]
 
             # condition_1 = (1-detection_threshold) < bitwise_acc < detection_threshold
             condition_1 = bitwise_acc < detection_threshold
@@ -112,8 +112,8 @@ def main(args):
                 best_index = index_log[idx]
                 best_psnr_w = psnr_w
                 best_psnr_orig = psnr_orig
-                best_ssim_w = ssim_w
-                best_ssim_orig = ssim_orig
+                # best_ssim_w = ssim_w
+                # best_ssim_orig = ssim_orig
         # print("Best evade iter [{}] with PSNR-W [{}] & PSNR-orig [{}]".format(best_index, best_psnr_w, best_psnr_orig))
 
         if best_index is None:
@@ -151,16 +151,16 @@ def main(args):
     # === Summarize Data ===
     mean_psnr_w, std_psnr_w = np.mean(best_psnr_w_log), np.std(best_psnr_w_log)
     mean_psnr_orig, std_psnr_orig = np.mean(best_psnr_orig_log), np.std(best_psnr_orig_log)
-    mean_ssim_w, std_ssim_w = np.mean(best_ssim_w_log), np.std(best_ssim_w_log)
-    mean_ssim_orig, std_ssim_orig = np.mean(best_ssim_orig_log), np.std(best_ssim_orig_log)
+    # mean_ssim_w, std_ssim_w = np.mean(best_ssim_w_log), np.std(best_ssim_w_log)
+    # mean_ssim_orig, std_ssim_orig = np.mean(best_ssim_orig_log), np.std(best_ssim_orig_log)
     mean_psnr_w_to_orig, std_psnr_w_to_orig = np.mean(psnr_w_to_orig_log), np.std(psnr_w_to_orig_log)
     evade_success_rate = np.mean(evade_success_log)
     print("===== Processed Summary: Watermarker [{}] - Dataset [{}] =====".format(args.watermarker, args.dataset))
     print("PSNR ot orig: Mean {:.02f} - std({:.02f})".format(mean_psnr_w_to_orig, std_psnr_w_to_orig))
     print("Best PSNR-Orig: Mean - STD: ")
     print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_orig, std_psnr_orig))
-    print("Best SSIM-Orig: Mean - STD: ")
-    print("  [{:.02f}] - [{:.02f}]".format(mean_ssim_orig, std_ssim_orig))
+    # print("Best SSIM-Orig: Mean - STD: ")
+    # print("  [{:.02f}] - [{:.02f}]".format(mean_ssim_orig, std_ssim_orig))
     print("Best PSNR-W: Mean - STD: ")
     print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_w, std_psnr_w))
     print("Evasion success rate: {:.03f} %".format(evade_success_rate * 100))
@@ -170,7 +170,7 @@ def main(args):
         "psnr_w_to_orig": psnr_w_to_orig_log,
         "best_psnr_w": best_psnr_w_log,
         "best_psnr_orig": best_psnr_orig_log,
-        "best_ssim_orig": best_ssim_orig_log,
+        # "best_ssim_orig": best_ssim_orig_log,
         "evade_success_rate": np.mean(evade_success_log)
     }
     with open(save_file_name, 'wb') as handle:
@@ -210,16 +210,16 @@ if __name__ == "__main__":
         default="gaussian_noise"
     )
     args = parser.parse_args()
-    main(args)
+    # main(args)
 
-    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
-    # corrupter_names = [f for f in os.listdir(root_lv1)]
-    # for corrupter in corrupter_names:
-    #     root_lv2 = os.path.join(root_lv1, corrupter)
-    #     arch_names = [f for f in os.listdir(root_lv2)]
-    #     for arch in arch_names:
-    #         args.evade_method = corrupter
-    #         args.arch = arch
-    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-    #         main(args)
+    root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    corrupter_names = [f for f in os.listdir(root_lv1)]
+    for corrupter in corrupter_names:
+        root_lv2 = os.path.join(root_lv1, corrupter)
+        arch_names = [f for f in os.listdir(root_lv2)]
+        for arch in arch_names:
+            args.evade_method = corrupter
+            args.arch = arch
+            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+            main(args)
     print("Completed.")
