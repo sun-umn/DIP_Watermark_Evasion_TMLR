@@ -255,16 +255,16 @@ if __name__ == "__main__":
         default="dummy"
     )
     args = parser.parse_args()
-    main(args)
+    # main(args)
 
-    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
-    # corrupter_names = [f for f in os.listdir(root_lv1)]
-    # for corrupter in corrupter_names:
-    #     root_lv2 = os.path.join(root_lv1, corrupter)
-    #     arch_names = [f for f in os.listdir(root_lv2)]
-    #     for arch in arch_names:
-    #         args.evade_method = corrupter
-    #         args.arch = arch
-    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-    #         main(args)
+    root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    corrupter_names = [f for f in os.listdir(root_lv1)]
+    for corrupter in corrupter_names:
+        root_lv2 = os.path.join(root_lv1, corrupter)
+        arch_names = [f for f in os.listdir(root_lv2)]
+        for arch in arch_names:
+            args.evade_method = corrupter
+            args.arch = arch
+            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+            main(args)
     print("Completed.")
