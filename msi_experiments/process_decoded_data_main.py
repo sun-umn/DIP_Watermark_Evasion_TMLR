@@ -64,14 +64,17 @@ def main(args):
         # Readin the im_w into bgr uint8 format
         im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
         im_w_bgr_uint8 = cv2.imread(im_w_path)
+        im_w_int = im_w_bgr_uint8.astype(np.int32)
+
         # Readin im_orig and im_w and calculate this psnr 
         im_orig_path = os.path.join(im_orig_root_dir, im_orig_name)
         im_orig_bgr_uint8 = cv2.imread(im_orig_path)
-
         if args.watermarker == "StegaStamp":
             im_orig_bgr_uint8 = cv2.resize(im_orig_bgr_uint8, (400, 400), interpolation=cv2.INTER_AREA)
+        im_orig_int = im_orig_bgr_uint8.astype(np.int32)
+
         psnr_w_to_orig = compute_psnr(
-            im_orig_bgr_uint8.astype(np.int16), im_w_bgr_uint8.astype(np.int16), data_range=255
+            im_orig_int, im_w_int, data_range=255
         )
         # save (1)
         psnr_w_to_orig_log.append(psnr_w_to_orig)
@@ -131,15 +134,16 @@ def main(args):
             else:
                 img_recon_list = interm_data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
             best_recon = img_recon_list[best_index]  # bgr_uint8
+            best_recon_int = best_recon.astype(np.int32)
 
             # SSIM
             ssim_recon_orig = compute_ssim(
-                im_orig_bgr_uint8.astype(np.int16), best_recon.astype(np.int16), data_range=255
+                im_orig_int, best_recon_int, data_range=255
             )
             best_ssim_orig_log.append(ssim_recon_orig)
 
             # Quantile 90 % value
-            err_values = np.abs(im_orig_bgr_uint8.astype(np.float), best_recon.astype(np.int16)).flatten()
+            err_values = np.abs(im_orig_int, best_recon_int).flatten()
             quantile = np.quantile(err_values, 0.9)
             best_quantile_log.append(quantile)
 
