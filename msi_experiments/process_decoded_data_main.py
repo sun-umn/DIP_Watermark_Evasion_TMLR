@@ -119,7 +119,10 @@ def main(args):
             evade_success_log.append(1)
 
             # After getting the best index, calculate the ssim and quantile metric respectively
-            interm_file_path = os.path.join(interm_root_dir, file_name) # Retrive the interm file
+            if args.watermarker != "StegaStamp": # Retrive the interm file
+                interm_file_path = os.path.join(interm_root_dir, file_name)
+            else:
+                interm_file_path = os.path.join(interm_root_dir, file_name.replace(".pkl", "_hidden.pkl")) 
             # Load Data
             with open(interm_file_path, 'rb') as handle:
                 interm_data_dict = pickle.load(handle)
@@ -136,12 +139,12 @@ def main(args):
             best_ssim_orig_log.append(ssim_recon_orig)
 
             # Quantile 90 % value
-            err_values = np.abs(im_orig_bgr_uint8.astype(np.int16), best_recon.astype(np.int16)).flatten()
+            err_values = np.abs(im_orig_bgr_uint8.astype(np.float), best_recon.astype(np.int16)).flatten()
             quantile = np.quantile(err_values, 0.9)
             best_quantile_log.append(quantile)
 
             # === Sanity Check === 1) Vis im_orig; 2) Vis im_best_recon; 3) histo of err_values
-            if "Img-1.pkl" == file_name:
+            if file_names[0] == file_name:
                 save_name = os.path.join(save_root_dir, "{}_{}_orig.png".format(args.evade_method, args.arch))
                 save_image_bgr(im_orig_bgr_uint8, save_name)
                 save_name = os.path.join(save_root_dir, "{}_{}_recon.png".format(args.evade_method, args.arch))
@@ -166,7 +169,7 @@ def main(args):
                 plt.close(fig)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
-        if "Img-1.pkl" == file_name:
+        if file_names[0] == file_name:
             best_index = index_log[best_index]
             fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
             ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
@@ -182,7 +185,7 @@ def main(args):
                 ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
             ax[1].legend()
             plt.tight_layout()
-            save_name = os.path.join(save_root_dir, "psnr_bt_acc_Img-1.png")
+            save_name = os.path.join(save_root_dir, "{}_{}_psnr_bt_acc.png".format(args.evade_method, args.arch))
             plt.savefig(save_name)
 
     # === Summarize Data ===
@@ -261,7 +264,7 @@ if __name__ == "__main__":
     corrupter_names = [f for f in os.listdir(root_lv1)]
     for corrupter in corrupter_names:
         root_lv2 = os.path.join(root_lv1, corrupter)
-        arch_names = [f for f in os.listdir(root_lv2)]
+        arch_names = [f for f in os.listdir(root_lv2) if "blur" not in f]
         for arch in arch_names:
             args.evade_method = corrupter
             args.arch = arch
