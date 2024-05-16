@@ -143,7 +143,7 @@ def main(args):
             best_ssim_orig_log.append(ssim_recon_orig)
 
             # Quantile 90 % value
-            err_values = np.abs(im_orig_int, best_recon_int).flatten()
+            err_values = np.abs(im_orig_int - best_recon_int).flatten()
             quantile = np.quantile(err_values, 0.9)
             best_quantile_log.append(quantile)
 
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="diffuser"
+        default="dip"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -259,7 +259,7 @@ if __name__ == "__main__":
                 diffuser --- Do not need.
                 diffpure --- ["0.1", "0.2", "0.3"]
         """,
-        default="dummy"
+        default="vanila"
     )
     args = parser.parse_args()
     # main(args)
