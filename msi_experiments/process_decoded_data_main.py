@@ -173,7 +173,7 @@ def main(args):
                 plt.close(fig)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
-        if file_names[0] == file_name:
+        if file_names[0] == file_name and args.evade_method != "WevadeBQ":
             best_index = index_log[best_index]
             fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
             ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
