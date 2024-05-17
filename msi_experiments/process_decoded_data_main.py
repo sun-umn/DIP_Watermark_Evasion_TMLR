@@ -134,6 +134,8 @@ def main(args):
             else:
                 img_recon_list = interm_data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
             best_recon = img_recon_list[best_index]  # bgr_uint8
+            if args.arch == "cheng2020-anchor":
+                best_recon = cv2.resize(best_recon, (400, 400), interpolation=cv2.INTER_AREA)
             best_recon_int = best_recon.astype(np.int32)
 
             # SSIM
@@ -173,7 +175,7 @@ def main(args):
                 plt.close(fig)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
-        if file_names[0] == file_name and args.evade_method != "WevadeBQ":
+        if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
             best_index = index_log[best_index]
             fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
             ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
