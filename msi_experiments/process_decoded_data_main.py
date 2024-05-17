@@ -134,7 +134,7 @@ def main(args):
             else:
                 img_recon_list = interm_data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
             best_recon = img_recon_list[best_index]  # bgr_uint8
-            if args.arch == "cheng2020-anchor":
+            if args.arch == "cheng2020-anchor" and args.watermarker == "StegaStamp":
                 best_recon = cv2.resize(best_recon, (400, 400), interpolation=cv2.INTER_AREA)
             best_recon_int = best_recon.astype(np.int32)
 
