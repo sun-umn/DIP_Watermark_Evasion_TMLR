@@ -158,7 +158,7 @@ def main(args):
 
                 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 3))
                 n, bins, _ = ax.hist(err_values, bins=np.amax(err_values), alpha=0.6)
-                ax.vlines(quantile, ymin=0.01, ymax=1e6, color="black", ls="dashed", lw=2, label="Quantile 0.9")
+                ax.vlines(quantile, ymin=0.01, ymax=1e6, color="black", ls="dashed", lw=2,  label=r"$x = {:d}$".format(int(quantile)))
                 ax.set_yscale("log")
                 ax.yaxis.grid(True)
                 ax.xaxis.grid(False)
@@ -168,7 +168,7 @@ def main(args):
                 ax.set_yticks([1e2, 1e5])
                 ax.tick_params(axis='y', labelsize=25)
                 ax.tick_params(axis='x', labelsize=25)
-                # ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=25, framealpha=0.3)
+                ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=25, framealpha=0.3)
                 plt.tight_layout()
                 save_name = os.path.join(save_root_dir, "{}_{}_histo.png".format(args.evade_method, args.arch))
                 plt.savefig(save_name)
