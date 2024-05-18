@@ -118,7 +118,7 @@ def main(args):
     if args.evade_method.lower() == "dip":
         print("Best evade iter: {}".format(evasion_res["best_evade_iter"]))
         print("Best evade PSNR: {:.04f}".format(evasion_res["best_evade_psnr"]))
-        plot_dip_res(vis_root_dir, evasion_res, detection_threshold, vis_recon=False)
+        plot_dip_res(vis_root_dir, evasion_res, detection_threshold, vis_recon=True)
     elif args.evade_method.lower() == "vae":
         print("Best evade quality: {}".format(evasion_res["best_evade_quality"]))
         print("Best evade PSNR   : {:.04f}".format(evasion_res["best_evade_psnr"]))
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="clean image name.",
-        default="711.png"
+        default="Img-1.png"
     )
     parser.add_argument(
         "--root_path_im_w", dest="root_path_im_w", type=str, help="Root folder to save watermarked image.",
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="diffpure"
+        default="dip"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
                 diffuser --- Do not need.
                 diffpure --- [0.1, 0.2, 0.4] representing the step params
         """,
-        default="0.1"
+        default="vanila"
     )
     parser.add_argument(
         "--detection_threshold", dest="detection_threshold", type=float, default=0.75,

@@ -7,6 +7,8 @@ dataset/examples/DiffusionDB
 Result-*
 slurm*
 DiffPure/*
+examples/COCO
+examples/DiffusionDB
 
 # === Standard build files ====
 

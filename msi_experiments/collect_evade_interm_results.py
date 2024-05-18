@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
         "--random_seed", dest="random_seed", type=int, help="Manually set random seed for reproduction.",
-        default=13
+        default=38
     )
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
