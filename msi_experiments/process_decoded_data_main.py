@@ -177,19 +177,27 @@ def main(args):
         # # === Sanity Check === Plot the psnr and bitwise acc curve
         if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
             best_index = index_log[best_index]
-            fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
-            ax[0].plot(index_log, psnr_orig_log, label="PSNR (recon - clean)", color="orange")
-            ax[0].plot(index_log, psnr_w_log, label="PSNR (recon - watermarked)", color="blue", ls="dashed")
+            fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(5, 5))
+            ax[0].plot(index_log, psnr_orig_log, label=r"PSNR (to $I$)", color="orange")
+            ax[0].plot(index_log, psnr_w_log, label=r"PSNR (to $I_w$)", color="blue", ls="dashed")
             if best_index is not None:
-                ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter")
-            ax[0].legend()
+                ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter.")
+            ax[0].legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=12, framealpha=0.3)
+            ax[0].set_yticks([15, 25, 35])
+            ax[0].tick_params(axis='y', labelsize=15)
 
             ax[1].plot(index_log, bitwise_acc_log, label="Bitwise Acc.")
-            ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="black")
-            ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="black")
+            ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", label="Detection Thres.")
+            # ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="black")
             if best_index is not None:
-                ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Recon Iter")
-            ax[1].legend()
+                ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Evade Iter.")
+            ax[1].legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=12, framealpha=0.3)
+            ax[1].set_yticks([0.25, 0.75])
+            ax[1].set_xticks([0, 200, 400])
+            ax[1].set_ylim([-0.05, 1.05])
+            ax[1].set_xlim([0, 500])
+            ax[1].tick_params(axis='x', labelsize=15)
+            ax[1].tick_params(axis='y', labelsize=15)
             plt.tight_layout()
             save_name = os.path.join(save_root_dir, "{}_{}_psnr_bt_acc.png".format(args.evade_method, args.arch))
             plt.savefig(save_name)
