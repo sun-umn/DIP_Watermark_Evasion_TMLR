@@ -135,7 +135,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Some arguments to play with.')
     parser.add_argument(
         "--dataset", dest="dataset", type=str, help="Dataset name.",
-        default="COCO"
+        default="DiffusionDB"
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="Clean image name.",
