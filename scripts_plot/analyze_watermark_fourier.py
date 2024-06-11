@@ -63,10 +63,15 @@ def plot_fft(fft_dict, max_res_mag, type_name="", watermarker="none", vis_root=N
         figure, ax = plt.subplots(nrows=1, ncols=1, figsize=(5, 5))
         fourier = fft_dict[idx]
         magnitude = np.absolute(fourier)
-        log_magnitude = np.log(magnitude) / np.log(max_res_mag)
+
+        log_magnitude = np.log(magnitude)
+        log_magnitude = np.clip(log_magnitude, -float("inf"), 7)
         min_mag = np.amin(log_magnitude)
-        log_magnitude = np.clip(log_magnitude, 0, 1)
-        # log_magnitude = (log_magnitude - min_mag) / (1 - min_mag)
+        max_mag = np.amax(log_magnitude)
+        
+        print("Max Mag: ", max_mag, "Min Mag: ", min_mag)
+        # log_magnitude = np.clip(log_magnitude, 0, 1)
+        log_magnitude = (log_magnitude - min_mag) / (max_mag - min_mag)
         # ax.imshow(log_magnitude, cmap='hot', interpolation='bilinear')
         ax.imshow(log_magnitude)
         ax.yaxis.grid(False)
@@ -143,7 +148,7 @@ def main(args):
             fft_mag = np.absolute(fft_res[i])
             max_res_mag = max(max_res_mag, np.amax(fft_mag))
 
-        # ==== Create log folder ====
+        # # ==== Create log folder ====
         vis_root_dir = os.path.join(
             ".", "Vis-Fourier", watermarker
         )
@@ -168,6 +173,87 @@ def main(args):
         #     plt.tight_layout()
         #     plt.savefig(save_name)
         #     plt.close(figure)
+
+
+        # === Calculate Energy Band ====
+        test_val = fourier_clean[0]
+        center = 255.5
+        energy_res_dict = {}
+        
+        total_dim = 512
+        for i in range(total_dim):
+            for j in range(total_dim):
+                complex_value = test_val[i, j]
+                energy = np.absolute(complex_value) ** 2
+
+                radius = int(np.floor(np.sqrt((i-center)**2 + (j-center)**2)))
+                if radius not in energy_res_dict.keys():
+                    energy_res_dict[radius] = energy
+                else:
+                    energy_res_dict[radius] += energy
+
+        max_radius = np.amax(list(energy_res_dict.keys()))
+
+        clean_keys, clean_values = np.arange(max_radius+1), np.zeros(max_radius+1)
+        for key in energy_res_dict.keys():
+            clean_values[key] = energy_res_dict[key]
+        max_y = np.amax(clean_values)
+
+        figure, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 2))
+        ax.plot(clean_keys, clean_values, label="Clean", color="orange", lw=3, alpha=0.6)
+        ax.legend()
+        ax.set_ylim([1, max_y*5])
+        ax.set_yscale('log')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.tick_params(axis='y', labelsize=20)
+        ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+        save_name = os.path.join(vis_root_dir, "Clean-energy-band.png")
+        plt.tight_layout()
+        plt.savefig(save_name)
+        plt.close(figure)
+
+    
+        # === Calculate Energy Band ====
+        test_val = fft_w[0]
+        # test_val = fft_res[0]
+        center = 255.5
+        energy_res_dict = {}
+        
+        total_dim = 512
+        for i in range(total_dim):
+            for j in range(total_dim):
+                complex_value = test_val[i, j]
+                energy = np.absolute(complex_value) ** 2
+
+                radius = int(np.floor(np.sqrt((i-center)**2 + (j-center)**2)))
+                if radius not in energy_res_dict.keys():
+                    energy_res_dict[radius] = energy
+                else:
+                    energy_res_dict[radius] += energy
+
+        max_radius = np.amax(list(energy_res_dict.keys()))
+
+        keys, values = np.arange(max_radius+1), np.zeros(max_radius+1)
+        for key in energy_res_dict.keys():
+            values[key] = energy_res_dict[key]
+
+        figure, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 2))
+
+        ax.plot(keys, values, label=watermarker, lw=3, alpha=0.6)
+        ax.plot(clean_keys, clean_values, color="orange", lw=3, alpha=0.6)
+        ax.legend()
+        ax.set_ylim([1, max_y*5])
+        ax.set_yscale('log')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.tick_params(axis='y', labelsize=20)
+        ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+        save_name = os.path.join(vis_root_dir, "{}-energy-band.png".format(watermarker))
+        plt.tight_layout()
+        plt.savefig(save_name)
+        plt.close(figure)
+
 
 
 if __name__ == "__main__":
