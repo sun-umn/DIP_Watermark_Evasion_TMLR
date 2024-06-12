@@ -150,7 +150,7 @@ def main(args):
             best_quantile_log.append(quantile)
 
             # === Sanity Check === 1) Vis im_orig; 2) Vis im_best_recon; 3) histo of err_values
-            if file_names[0] == file_name:
+            if file_names[2] == file_name:
                 save_name = os.path.join(save_root_dir, "{}_{}_orig.png".format(args.evade_method, args.arch))
                 save_image_bgr(im_orig_bgr_uint8, save_name)
                 save_name = os.path.join(save_root_dir, "{}_{}_recon.png".format(args.evade_method, args.arch))
@@ -177,30 +177,43 @@ def main(args):
         # # === Sanity Check === Plot the psnr and bitwise acc curve
         if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
             best_index = index_log[best_index]
-            fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(5, 5))
-            ax[0].plot(index_log, psnr_orig_log, label=r"PSNR (to $I$)", color="orange")
-            ax[0].plot(index_log, psnr_w_log, label=r"PSNR (to $I_w$)", color="blue", ls="dashed")
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(5, 5))
+            ax.plot(index_log, psnr_orig_log, label=r"PSNR ($I$)", color="orange", lw=2, alpha=0.6)
+            ax.plot(index_log, psnr_w_log, label=r"PSNR ($I_w$)", color="blue", ls="dashed", lw=2, alpha=0.6)
             if best_index is not None:
-                ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter.")
-            ax[0].legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=12, framealpha=0.3)
-            ax[0].set_yticks([15, 25, 35])
-            ax[0].tick_params(axis='y', labelsize=15)
-
-            ax[1].plot(index_log, bitwise_acc_log, label="Bitwise Acc.")
-            ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", label="Detection Thres.")
-            # ax[1].hlines(y=(1-detection_threshold), xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="black")
-            if best_index is not None:
-                ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Evade Iter.")
-            ax[1].legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=12, framealpha=0.3)
-            ax[1].set_yticks([0.25, 0.75])
-            ax[1].set_xticks([0, 200, 400])
-            ax[1].set_ylim([-0.05, 1.05])
-            ax[1].set_xlim([0, 500])
-            ax[1].tick_params(axis='x', labelsize=15)
-            ax[1].tick_params(axis='y', labelsize=15)
+                # ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter.")
+                ax.vlines(best_index, ymin=9.5, ymax=43, color="black", ls="dashed", lw=2, alpha=0.6)
+            ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            
+            ax.tick_params(axis='y', labelsize=20)
+            ax.set_ylim([10, 45])
+            ax.set_xlim([-5, 500])
+            ax.set_yticks([])
+            ax.set_xticks([])
             plt.tight_layout()
-            save_name = os.path.join(save_root_dir, "{}_{}_psnr_bt_acc.png".format(args.evade_method, args.arch))
-            plt.savefig(save_name)
+            save_name = os.path.join(save_root_dir, "{}_{}_psnr.png".format(args.evade_method, args.arch))
+            plt.savefig(save_name, bbox_inches='tight')
+            
+
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(5, 5))
+            ax.plot(index_log, bitwise_acc_log, label="Bitwise Acc.", lw=2, alpha=0.6)
+            # ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", label="Detection Thres.")
+            ax.hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", lw=2, alpha=0.6)
+            if best_index is not None:
+                # ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Evade Iter.")
+                ax.vlines(best_index, ymin=-0.1, ymax=1.1, color="black", ls="dashed", lw=2, alpha=0.6)
+            ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            # ax[1].set_yticks([0.25, 0.75])
+            # ax[1].set_xticks([0, 200, 400])
+            ax.set_yticks([])
+            ax.set_xticks([])
+            ax.set_ylim([-0.05, 1.05])
+            ax.set_xlim([-5, 500])
+            ax.tick_params(axis='x', labelsize=20)
+            ax.tick_params(axis='y', labelsize=20)
+            plt.tight_layout()
+            save_name = os.path.join(save_root_dir, "{}_{}_bt_acc.png".format(args.evade_method, args.arch))
+            plt.savefig(save_name, bbox_inches='tight')
 
     # === Summarize Data ===
     mean_psnr_w, std_psnr_w = np.mean(best_psnr_w_log), np.std(best_psnr_w_log)
