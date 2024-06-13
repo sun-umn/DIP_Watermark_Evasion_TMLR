@@ -150,7 +150,7 @@ def main(args):
             best_quantile_log.append(quantile)
 
             # === Sanity Check === 1) Vis im_orig; 2) Vis im_best_recon; 3) histo of err_values
-            if file_names[2] == file_name:
+            if file_names[0] == file_name:
                 save_name = os.path.join(save_root_dir, "{}_{}_orig.png".format(args.evade_method, args.arch))
                 save_image_bgr(im_orig_bgr_uint8, save_name)
                 save_name = os.path.join(save_root_dir, "{}_{}_recon.png".format(args.evade_method, args.arch))
@@ -175,7 +175,7 @@ def main(args):
                 plt.close(fig)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
-        if file_names[2] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
+        if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
             best_index = index_log[best_index]
             fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(4, 2))
             ax.plot(index_log, psnr_orig_log, label=r"PSNR ($I$)", color="orange", lw=2, alpha=0.6)
