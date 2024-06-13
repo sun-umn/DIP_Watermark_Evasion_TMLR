@@ -175,9 +175,9 @@ def main(args):
                 plt.close(fig)
 
         # # === Sanity Check === Plot the psnr and bitwise acc curve
-        if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
+        if file_names[2] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
             best_index = index_log[best_index]
-            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(5, 5))
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(4, 2))
             ax.plot(index_log, psnr_orig_log, label=r"PSNR ($I$)", color="orange", lw=2, alpha=0.6)
             ax.plot(index_log, psnr_w_log, label=r"PSNR ($I_w$)", color="blue", ls="dashed", lw=2, alpha=0.6)
             if best_index is not None:
@@ -194,8 +194,7 @@ def main(args):
             save_name = os.path.join(save_root_dir, "{}_{}_psnr.png".format(args.evade_method, args.arch))
             plt.savefig(save_name, bbox_inches='tight')
             
-
-            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(5, 5))
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(4, 2))
             ax.plot(index_log, bitwise_acc_log, label="Bitwise Acc.", lw=2, alpha=0.6)
             # ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", label="Detection Thres.")
             ax.hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", lw=2, alpha=0.6)
