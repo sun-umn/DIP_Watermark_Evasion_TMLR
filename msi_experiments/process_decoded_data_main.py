@@ -27,6 +27,7 @@ def calc_bitwise_acc(gt_str, decoded_str):
 
 
 def main(args):
+    print("=== Detection Threshold {} ===".format(args.detection_threshold))
     data_root_dir = os.path.join("Result-Decoded", args.watermarker, args.dataset, args.evade_method, args.arch)
     file_names = [f for f in os.listdir(data_root_dir) if ".pkl" in f]
 
@@ -100,7 +101,7 @@ def main(args):
 
         # === To finde the best evade Iter ===
         best_index, best_psnr_w, best_psnr_orig = None, -float("inf"), None
-        detection_threshold = 0.75
+        detection_threshold = args.detection_threshold
         # Exausive search 
         for idx in range(num_interm_data): 
             psnr_w = psnr_w_log[idx]
@@ -183,7 +184,7 @@ def main(args):
             if best_index is not None:
                 # ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter.")
                 ax.vlines(best_index, ymin=9.5, ymax=43, color="black", ls="dashed", lw=2, alpha=0.6)
-            ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            # ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
             
             ax.tick_params(axis='y', labelsize=20)
             ax.set_ylim([10, 45])
@@ -201,7 +202,7 @@ def main(args):
             if best_index is not None:
                 # ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Evade Iter.")
                 ax.vlines(best_index, ymin=-0.1, ymax=1.1, color="black", ls="dashed", lw=2, alpha=0.6)
-            ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            # ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
             # ax[1].set_yticks([0.25, 0.75])
             # ax[1].set_xticks([0, 200, 400])
             ax.set_yticks([])
@@ -270,6 +271,10 @@ if __name__ == "__main__":
         default="vae"
     )
     parser.add_argument(
+        "--detection_threshold", dest="detection_threshold", type=float, help="Threshold for bitwise acc.",
+        default=0.75
+    )
+    parser.add_argument(
         "--arch", dest="arch", type=str, 
         help="""
             Secondary specification of evasion method (if there are other choices).
@@ -284,16 +289,16 @@ if __name__ == "__main__":
         default="cheng2020-anchor"
     )
     args = parser.parse_args()
-    main(args)
+    # main(args)
 
-    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
-    # corrupter_names = [f for f in os.listdir(root_lv1)]
-    # for corrupter in corrupter_names:
-    #     root_lv2 = os.path.join(root_lv1, corrupter)
-    #     arch_names = [f for f in os.listdir(root_lv2) if "blur" not in f]
-    #     for arch in arch_names:
-    #         args.evade_method = corrupter
-    #         args.arch = arch
-    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
-    #         main(args)
+    root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    corrupter_names = [f for f in os.listdir(root_lv1)]
+    for corrupter in corrupter_names:
+        root_lv2 = os.path.join(root_lv1, corrupter)
+        arch_names = [f for f in os.listdir(root_lv2) if "blur" not in f]
+        for arch in arch_names:
+            args.evade_method = corrupter
+            args.arch = arch
+            print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+            main(args)
     print("Completed.")
