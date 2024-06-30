@@ -14,6 +14,17 @@ from utils.general import compute_ssim, save_image_bgr
 import pandas as pd
 
 
+def calc_bitwise_acc(gt_str, decoded_str):
+    correct, total = 0., 0.
+    for i in range(min(len(gt_str), len(decoded_str))):
+        if gt_str[i] == decoded_str[i]:
+            correct = correct + 1.
+        total = total + 1.
+    if len(gt_str) != len(decoded_str):
+        total += abs(len(gt_str) - len(decoded_str))
+    return correct / total
+
+
 THRESHOLDS_DICT = {
     1: 0.55,
     2: 0.65,
@@ -22,22 +33,34 @@ THRESHOLDS_DICT = {
     5: 0.95
 }
 def main(args):
-    data_root_dir = os.path.join(
-        "Result-Decoded", args.watermarker, args.dataset, args.evade_method, args.arch
-    )
-    file_names = [f for f in os.listdir(data_root_dir) if ".pkl" in f]
-    for file_name in file_names:
-        
-        # Load Data
-        file_path = os.path.join(data_root_dir, file_name)
-        with open(file_path, 'rb') as handle:
-            data_dict = pickle.load(handle)
+    print("Watermarker: ", args.watermarker)
+    summary_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
+    annot_data = pd.read_csv(summary_file)
 
-        index_log = data_dict["index"]
-        watermark_gt_str = data_dict["watermark_gt_str"]
-        watermark_decoded_str = data_dict["watermark_decoded"]
+    len_data = len(annot_data)
+    print("Total Data Len: ", len_data)
+    watermark_gt_str = annot_data.iloc[0]["Encoder"]
 
-        # 
+    res_dict = {}
+    for key in THRESHOLDS_DICT.keys():
+        res_dict[key] = []
+
+
+    for idx in range(len_data):
+        data = annot_data.iloc[idx]
+        watermark_decoded_str = data["Decoder"]
+        ba = calc_bitwise_acc(watermark_gt_str, watermark_decoded_str)
+        for key in THRESHOLDS_DICT.keys():
+            value = THRESHOLDS_DICT[key]
+            if ba >= value:
+                res_dict[key].append(1)
+            else:
+                res_dict[key].append(0)
+
+    for key in res_dict.keys():
+        print("Threshold: ", THRESHOLDS_DICT[key])
+        print("  TPR: ", np.mean(res_dict[key]))
+
 
 
 if __name__ == "__main__":
@@ -45,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="StegaStamp"
+        default="rivaGan"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 
