@@ -34,20 +34,20 @@ THRESHOLDS_DICT = {
 }
 def main(args):
     print("Watermarker: ", args.watermarker)
-    summary_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
-    annot_data = pd.read_csv(summary_file)
-
-    len_data = len(annot_data)
-    print("Total Data Len: ", len_data)
-    watermark_gt_str = annot_data.iloc[0]["Encoder"]
+    watermarked_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
+    watermarked_data = pd.read_csv(watermarked_file)
+    watermark_gt_str = watermarked_data.iloc[0]["Encoder"]
 
     res_dict = {}
     for key in THRESHOLDS_DICT.keys():
         res_dict[key] = []
 
+    clean_decoded_file = os.path.join(".", "dataset", "Clean_Watermark_Evasion", args.watermarker, args.dataset, "water_mark.csv")
+    decoded_data = pd.read_csv(clean_decoded_file)
+    len_data = len(decoded_data)
 
     for idx in range(len_data):
-        data = annot_data.iloc[idx]
+        data = decoded_data.iloc[idx]
         watermark_decoded_str = data["Decoder"]
         ba = calc_bitwise_acc(watermark_gt_str, watermark_decoded_str)
         for key in THRESHOLDS_DICT.keys():
@@ -59,7 +59,7 @@ def main(args):
 
     for key in res_dict.keys():
         print("Threshold: ", THRESHOLDS_DICT[key])
-        print("  TPR: ", np.mean(res_dict[key]))
+        print("  FPR: ", np.mean(res_dict[key]))
 
 
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="rivaGan"
+        default="SSL"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 
