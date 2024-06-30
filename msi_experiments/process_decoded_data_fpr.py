@@ -37,6 +37,8 @@ def main(args):
     watermarked_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
     watermarked_data = pd.read_csv(watermarked_file)
     watermark_gt_str = watermarked_data.iloc[0]["Encoder"]
+    if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+        watermark_gt_str = eval(watermark_gt_str)[0]
 
     res_dict = {}
     for key in THRESHOLDS_DICT.keys():
@@ -49,6 +51,8 @@ def main(args):
     for idx in range(len_data):
         data = decoded_data.iloc[idx]
         watermark_decoded_str = data["Decoder"]
+        if watermark_decoded_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+            watermark_decoded_str = eval(watermark_decoded_str)[0]
         ba = calc_bitwise_acc(watermark_gt_str, watermark_decoded_str)
         for key in THRESHOLDS_DICT.keys():
             value = THRESHOLDS_DICT[key]
@@ -68,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
-        default="SSL"
+        default="StegaStamp"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, 

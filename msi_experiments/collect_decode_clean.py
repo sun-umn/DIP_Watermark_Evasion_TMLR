@@ -11,23 +11,45 @@ import cv2
 import numpy as np
 import pandas as pd
 from utils.general import rgb2bgr, save_image_bgr, set_random_seeds, \
-    watermark_np_to_str
+    watermark_np_to_str, watermark_str_to_numpy
 from watermarkers import get_watermarkers
 
 
-def main():
+def main(args):
     # === Some dummt configs ===
     device = torch.device("cuda")
     set_random_seeds(args.random_seed)
 
     # === Set the dataset paths ===
     dataset_input_path = os.path.join(
-        args.clean_data_root, args.dataset_name
+        args.clean_data_root, args.dataset
     )
     output_root_path = os.path.join(
-        ".", "dataset", "Clean_Watermark_Evasion", args.watermarker, args.dataset_name
+        ".", "dataset", "Clean_Watermark_Evasion", args.watermarker, args.dataset
     )
     os.makedirs(output_root_path, exist_ok=True)
+
+    # === GT waternark ===
+    print("Watermarker: ", args.watermarker)
+    watermarked_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
+    watermarked_data = pd.read_csv(watermarked_file)
+    watermark_gt_str = watermarked_data.iloc[0]["Encoder"]
+    if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+        watermark_gt_str = eval(watermark_gt_str)[0]
+    watermark_gt = watermark_str_to_numpy(watermark_gt_str)
+
+    # === Init watermarker ===
+    watermarker_configs = {
+        "watermarker": args.watermarker,
+        "watermark_gt": watermark_gt
+    }
+    watermarker = get_watermarkers(watermarker_configs)
+    # Init the dict to save watermarking summary
+    save_csv_dir = os.path.join(output_root_path, "water_mark.csv")
+    res_dict = {
+        "ImageName": [],
+        "Decoder": [],
+    }
 
 
 if __name__ == "__main__":
@@ -42,7 +64,7 @@ if __name__ == "__main__":
         default=os.path.join(".", "dataset", "Clean")
     )
     parser.add_argument(
-        "--dataset_name", dest="dataset_name", type=str, help="The dataset name: [COCO, DiffusionDB]",
+        "--dataset", dest="dataset", type=str, help="The dataset name: [COCO, DiffusionDB]",
         default="COCO"
     )
     parser.add_argument(

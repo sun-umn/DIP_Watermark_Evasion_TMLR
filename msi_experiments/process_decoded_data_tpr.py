@@ -40,6 +40,8 @@ def main(args):
     len_data = len(annot_data)
     print("Total Data Len: ", len_data)
     watermark_gt_str = annot_data.iloc[0]["Encoder"]
+    if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+        watermark_gt_str = eval(watermark_gt_str)[0]
 
     res_dict = {}
     for key in THRESHOLDS_DICT.keys():
@@ -49,6 +51,8 @@ def main(args):
     for idx in range(len_data):
         data = annot_data.iloc[idx]
         watermark_decoded_str = data["Decoder"]
+        if watermark_decoded_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+            watermark_decoded_str = eval(watermark_decoded_str)[0]
         ba = calc_bitwise_acc(watermark_gt_str, watermark_decoded_str)
         for key in THRESHOLDS_DICT.keys():
             value = THRESHOLDS_DICT[key]
