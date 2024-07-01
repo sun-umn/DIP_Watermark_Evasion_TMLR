@@ -24,6 +24,10 @@ def main(args):
     dataset_input_path = os.path.join(
         args.clean_data_root, args.dataset
     )
+    # === Scan all images in the dataset (clean) ===
+    img_files = [f for f in os.listdir(dataset_input_path) if ".png" in f]
+    print("Total number of images: [{}] --- (Should be 100)".format(len(img_files)))
+
     output_root_path = os.path.join(
         ".", "dataset", "Clean_Watermark_Evasion", args.watermarker, args.dataset
     )
@@ -51,6 +55,20 @@ def main(args):
         "Decoder": [],
     }
 
+    for img_name in img_files:
+        img_clean_path = os.path.join(dataset_input_path, img_name)
+        print("***** ***** ***** *****")
+        print("Processing Image: {} ...".format(img_clean_path))
+
+        watermark_decode = watermarker.decode_from_path(img_clean_path)
+        watermark_decode_str = watermark_np_to_str(watermark_decode)
+
+        res_dict["ImageName"].append(img_name)
+        res_dict["Decoder"].append([watermark_decode_str])
+
+    df = pd.DataFrame(res_dict)
+    df.to_csv(save_csv_dir, index=False)
+
 
 if __name__ == "__main__":
     print("Use this script to download DiffusionDB dataset.")
@@ -69,7 +87,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Specification of watermarking method. ['dwtDctSvd', 'rivaGan']",
-        default="dwtDctSvd"
+        default="rivaGan"
     )
     args = parser.parse_args()
     main(args)
