@@ -24,18 +24,20 @@ def main(args):
     pkl_name = args.im_name.replace(".png", ".pkl")
 
     # === Read in watermarked images ===
-    im_w_path = os.path.join("dataset", watermarker, dataset, im_name)
+    im_w_path = os.path.join("dataset", watermarker, dataset, "encoder_img", im_name)
     im_w_bgr_uint8 = cv2.imread(im_w_path)
-    im_w_gray_unit8 = cv2.cvtColor(im_w_bgr_uint8, cv2.COLOR_BGR2GRAY)
     im_w_bgr_int = im_w_bgr_uint8.astype(np.int32)
-    im_w_gray_int = im_w_gray_unit8.astype(np.int32)
     im_w_bgr_float = uint8_to_float(im_w_bgr_uint8)
 
     dip_recon_path = os.path.join(
         "Result-Interm", watermarker, "dip", args.dip_arch, pkl_name
     )
-
-
+    with open(dip_recon_path, 'rb') as handle:
+        interm_data_dict = pickle.load(handle)
+    dip_interm_recons = interm_data_dict["interm_recon"]
+    
+    for idx, inter_recon_bgr_uint8 in enumerate(dip_interm_recons):
+        pass
 
 
 if __name__ == "__main__":
