@@ -28,6 +28,8 @@ def main(args):
     im_w_bgr_uint8 = cv2.imread(im_w_path)
     im_w_bgr_int = im_w_bgr_uint8.astype(np.int32)
     im_w_bgr_float = uint8_to_float(im_w_bgr_uint8)
+    # FFT of the watermarked image
+    
 
     dip_recon_path = os.path.join(
         "Result-Interm", watermarker, "dip", args.dip_arch, pkl_name
