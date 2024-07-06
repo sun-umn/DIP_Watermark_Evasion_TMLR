@@ -33,10 +33,15 @@ def main(args):
     watermarker = args.watermarker
     im_name = args.im_name
     pkl_name = args.im_name.replace(".png", ".pkl")
+    if watermarker == "StegaStamp":
+        im_name = im_name.replace(".png", "_hidden.png")
 
     # === Read in watermarked images ===
     im_w_path = os.path.join("dataset", watermarker, dataset, "encoder_img", im_name)
     im_w_bgr_uint8 = cv2.imread(im_w_path)
+    if watermarker == "StegaStamp":
+        im_w_bgr_uint8 = cv2.resize(im_w_bgr_uint8, (512, 512), interpolation=cv2.INTER_CUBIC)
+
     im_w_bgr_int = im_w_bgr_uint8.astype(np.int32)
     im_w_bgr_float = uint8_to_float(im_w_bgr_uint8)
     # FFT of the watermarked image
@@ -52,6 +57,8 @@ def main(args):
     
     interm_idx_log, interm_fft_log = [], []
     for idx, interm_recon_bgr_uint8 in enumerate(dip_interm_recons):
+        if watermarker == "StegaStamp":
+            interm_recon_bgr_uint8 = cv2.resize(interm_recon_bgr_uint8, (512, 512), interpolation=cv2.INTER_CUBIC)
         # Append index
         interm_idx_log.append(dip_interm_indices[idx])
         
@@ -65,10 +72,12 @@ def main(args):
     # === Calc mean fft band error ===
     fft_band_error_log = []
     fft_band_count_log = []
+    index_log = []
     center = 255.5
     total_dim = 512
 
     for img_idx in range(0, len(interm_fft_log), 10):
+        index_log.append(dip_interm_indices[img_idx])
         print("Processing {}".format(img_idx))
         interm_fft = interm_fft_log[img_idx]
         point_wise_err = compute_fft_band_err(fourier_w, interm_fft)
@@ -95,11 +104,29 @@ def main(args):
 
     # === Plot the result ===
     # TBD: Make it better looking 
-    fig, ax = plt.subplots(ncols=1, nrows=1)
+    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(4, 3))
     for i in range(5):
-        plt.plot(avg_err[:, i], label="Band {}".format(i))
-    plt.legend()
-    plt.show()
+        if i == 0:
+            msg = "{} (lowest)".format(i+1)
+        elif i == 4:
+            msg = "{} (highest)".format(i+1)
+        else:
+            msg = "{}".format(i+1)
+        ax.plot(index_log, avg_err[:, i], label=msg, lw=2, alpha=0.8)
+    # ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=15, framealpha=0.3)
+    ax.set_xticks([0, 200, 400])
+    ax.set_yticks([0.5, 1.0])
+    ax.grid("both")
+    ax.set_ylim([0, 1.2])
+    ax.tick_params(axis='x', labelsize=15)
+    ax.tick_params(axis='y', labelsize=0)
+    plt.tight_layout()
+
+    vis_dir = os.path.join(".", "Vis-FBE")
+    os.makedirs(vis_dir, exist_ok=True)
+    save_name = os.path.join(vis_dir, "{}.png".format(watermarker))
+    plt.savefig(save_name)
+    plt.close(fig)
     # =======================
 
 
@@ -111,7 +138,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, help="Watermarker Name.",
-        default="rivaGan"
+        default="dwtDctSvd"
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="Clean image name.",
