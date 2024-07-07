@@ -289,7 +289,9 @@ if __name__ == "__main__":
         default="cheng2020-anchor"
     )
     args = parser.parse_args()
-
+    
+    print(" ===== Start ======")
+    
     detection_thres_list = np.arange(55, 90, 10) * 0.01
     for d_thres in detection_thres_list:
         args.detection_threshold = d_thres
@@ -305,4 +307,4 @@ if __name__ == "__main__":
     #         args.arch = arch
     #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
     #         main(args)
-    print("Completed.")
+    print(" ===== Completed. ===== ")
