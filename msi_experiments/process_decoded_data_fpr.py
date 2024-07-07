@@ -25,13 +25,20 @@ def calc_bitwise_acc(gt_str, decoded_str):
     return correct / total
 
 
+# THRESHOLDS_DICT = {
+#     1: 0.55,
+#     2: 0.65,
+#     3: 0.75,
+#     4: 0.85,
+#     5: 0.95
+# }
 THRESHOLDS_DICT = {
-    1: 0.55,
-    2: 0.65,
-    3: 0.75,
-    4: 0.85,
-    5: 0.95
+    1: 0.6,
+    2: 0.7,
+    3: 0.8,
+    4: 0.9,
 }
+
 def main(args):
     print("Watermarker: ", args.watermarker)
     watermarked_file = os.path.join(".", "dataset", args.watermarker, args.dataset, "water_mark.csv")
