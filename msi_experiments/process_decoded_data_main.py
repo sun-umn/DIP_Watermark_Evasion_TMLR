@@ -290,7 +290,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    detection_thres_list = np.arange(55, 100, 10) * 0.01
+    detection_thres_list = np.arange(55, 90, 10) * 0.01
     for d_thres in detection_thres_list:
         args.detection_threshold = d_thres
         main(args)

@@ -33,10 +33,10 @@ def calc_bitwise_acc(gt_str, decoded_str):
 #     5: 0.95
 # }
 THRESHOLDS_DICT = {
-    1: 0.6,
-    2: 0.7,
-    3: 0.8,
-    4: 0.9,
+    1: 0.55,
+    2: 0.65,
+    3: 0.75,
+    4: 0.85,
 }
 
 def main(args):
