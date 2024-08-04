@@ -57,7 +57,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--num_images", dest="num_images", type=int, help="Number of DiffusionDB images to retrieve.",
-        default=100
+        default=2000
     )
     args = parser.parse_args()
     main(args)

@@ -13,7 +13,7 @@ from utils.general import rgb2bgr, save_image_bgr
 
 def main(args):
 
-    dataset = load_dataset('poloclub/diffusiondb', 'large_random_1k')["train"]
+    dataset = load_dataset('poloclub/diffusiondb', 'large_first_10k')["train"]
     folder_name = "DiffusionDB"
     # === Specify save path ===
     root_dir = os.path.join(args.root_dir, folder_name)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--num_images", dest="num_images", type=int, help="Number of DiffusionDB images to retrieve.",
-        default=100
+        default=2000
     )
     args = parser.parse_args()
     main(args)

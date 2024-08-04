@@ -2,7 +2,7 @@
 examples/water*
 Vis*
 test*
-dataset/examples/COCO
+dataset*
 dataset/examples/DiffusionDB
 Result-*
 slurm*
