@@ -7,6 +7,7 @@ import os, argparse
 from datasets import load_dataset
 import numpy as np
 from utils.general import rgb2bgr, save_image_bgr
+import cv2
 """
     Use this script to download and prepare the DiffusionDB images (which has been pulled in examples/DiffusionDB with this repo.)
 """
@@ -23,8 +24,19 @@ def main(args):
     for sample_idx in range(len(dataset)):
         test_sample = dataset[sample_idx]
         test_img = rgb2bgr(np.array(test_sample["image"]))
-        print("Img-{} shape: {}".format(sample_idx, test_img.shape))
-        if test_img.shape[0] == test_img.shape[1] == 512:
+        if min(test_img.shape[0], test_img.shape[1]) >= 512:
+            center = test_img.shape
+            h, w, _ = center
+            l = min(h, w)
+            x = center[1]/2 - l/2
+            y = center[0]/2 - l/2
+            crop_img = test_img[int(y):int(y+l), int(x):int(x+l)]
+            test_img = cv2.resize(
+                crop_img, (512, 512), 
+                interpolation=cv2.INTER_LINEAR
+            )
+            print("Img-{} shape: {}".format(sample_idx, test_img.shape))
+        
             img_id += 1
             save_name = os.path.join(root_dir, "Img-{:d}.png".format(img_id))
             save_image_bgr(test_img, save_name)
