@@ -163,19 +163,17 @@ def get_levels(cfg):
     method_name = cfg["arch"]
 
     if method_name.lower() == "gaussian_blur":
-        return np.arange(1, 1001, 10) / 100. 
+        return np.arange(5, 101, 5) / 100. 
     elif method_name.lower() == "gaussian_noise":
-        return np.arange(1, 101, 1) / 100.
+        return np.arange(5, 101, 5) / 100.
     elif method_name.lower() == "bm3d":
-        return np.arange(10, 301, 10) / 100. 
+        return np.arange(10, 101, 10) / 100. 
     elif method_name.lower() == "jpeg":
-        return np.arange(1, 101, 1) / 100. 
+        return np.arange(5, 101, 5) / 100. 
     elif method_name.lower() == "brightness":
-        # return np.arange(81, 101, 2) / 100. 
-        return np.arange(1, 101, 1) / 100.
+        return np.arange(5, 101, 5) / 100.
     elif method_name.lower() == "contrast":
-        # return np.arange(81, 101, 2) / 100. 
-        return np.arange(1, 101, 1) / 100.  
+        return np.arange(5, 101, 5) / 100.  
     else:
         raise RuntimeError("Un-implemented traditional image corruptions.")
     
