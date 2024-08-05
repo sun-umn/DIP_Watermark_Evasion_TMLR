@@ -22,7 +22,7 @@ def main(args):
     CONFIGS = {
         "dip": {
             "arch": args.arch,   # Used in DIP to select the variant architecture
-            "show_every": 10 if args.arch == "vanila" else 2,
+            "show_every": 5 if args.arch == "vanila" else 2,
             "total_iters": 500 if args.arch == "vanila" else 150, # Used in DIP as the max_iter
 
             "device": torch.device("cuda"),
