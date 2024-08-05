@@ -1,6 +1,6 @@
 from .dip_evation import dip_evasion_single_img, dip_interm_collection
 from .rp_evation import rp_evasion_single_img, rp_interm_collection
-from .vae_evation import vae_evasion_single_img, vae_interm_collection
+# from .vae_evation import vae_evasion_single_img, vae_interm_collection
 from .corrupters import corruption_evation_single_img, corruption_interm_collection
 from .diffusion_evation import diffuser_evation_single_img, diffuser_interm_collection
 from .diffpure import diffpure_evation_single_img, diffpure_interm_collection
@@ -15,7 +15,8 @@ def get_evasion_alg(method_name, arch=None):
         else:
             raise RuntimeError("Unsupported DIP arch specified")
     elif method_name.lower() == "vae":
-        method = vae_evasion_single_img
+        # method = vae_evasion_single_img
+        pass
     elif method_name.lower() == "corrupters":
         method = corruption_evation_single_img
     elif method_name.lower() == "diffuser":
@@ -37,7 +38,8 @@ def get_interm_collection_algo(method_name, arch=None):
         else:
             raise RuntimeError("Unsupported dip sub method specified.")
     elif method_name.lower() == "vae":
-        method = vae_interm_collection
+        # method = vae_interm_collection
+        pass
     elif method_name.lower() == "corrupters":
         method = corruption_interm_collection
     elif method_name.lower() == "diffuser":
