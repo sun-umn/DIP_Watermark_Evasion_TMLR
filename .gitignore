@@ -9,6 +9,7 @@ slurm*
 DiffPure/*
 examples/COCO
 examples/DiffusionDB
+DIP_Old*
 
 # === Standard build files ====
 
