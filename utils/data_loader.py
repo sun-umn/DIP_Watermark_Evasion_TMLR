@@ -31,8 +31,8 @@ class WatermarkedImageDataset(Dataset):
             watermark_gt_str = data["Encoder"]
             watermark_encoded_str = data["Decoder"]
         else:
-            watermark_gt_str = ["22"]
-            watermark_encoded_str = ["22"]
+            watermark_gt_str = "['22']"
+            watermark_encoded_str = "['22']"
         # encode_success = data["Match"]
         res = {
             "image_name": image_name.split(".")[0],
