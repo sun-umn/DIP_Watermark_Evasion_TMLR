@@ -9,6 +9,7 @@ compressai
 torch_fidelity
 accelerate
 onnxruntime
+pytorch_msssim
 
 # === Used in https://github.com/zhengyuan-jiang/WEvade ===
 adversarial-robustness-toolbox
