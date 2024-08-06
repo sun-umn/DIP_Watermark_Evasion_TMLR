@@ -1,5 +1,4 @@
 import numpy as np
-import bchlib
 import math, os
 import pickle
 
@@ -105,15 +104,27 @@ if __name__ == "__main__":
     # # 3) Convert the string to binary lateral:       binary_lateral = watermark_str_to_bitstr(watermark_str_decoded)
 
     # ##  Test Load data ===
-    dir = os.path.join(
-        ".", "Visualization", "711", "rivaGan", "dip",
-        "vanila", "result.pkl"
-    )
-    with open(dir, 'rb') as f:
-        data = pickle.load(f)
+    # dir = os.path.join(
+    #     ".", "Visualization", "711", "rivaGan", "dip",
+    #     "vanila", "result.pkl"
+    # )
+    # with open(dir, 'rb') as f:
+    #     data = pickle.load(f)
     
-    print(data.keys())
-    print(len(data["interm_recon"]))
-    print(data["iter_log"])
+    # print(data.keys())
+    # print(len(data["interm_recon"]))
+    # print(data["iter_log"])
 
-    print(data["interm_recon"][5])
+    # print(data["interm_recon"][5])
+
+    # Count File numbers 
+    watermarker = "rivaGan"
+    dataset = "DiffusionDB"
+    evader = "dip"
+    arch = "vanila"
+    result_dir = os.path.join(
+        "Result-Interm", watermarker, dataset, evader, arch
+    )
+    file_list = [f for f in os.listdir(result_dir)]
+    print("Number of files processed: ", len(file_list))
+    print("Completed.")
