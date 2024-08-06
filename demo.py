@@ -119,9 +119,9 @@ if __name__ == "__main__":
 
     # Count File numbers 
     watermarker = "rivaGan"
-    dataset = "DiffusionDB"
-    evader = "dip"
-    arch = "vanila"
+    dataset = "COCO"
+    evader = "corrupters"
+    arch = "bm3d"
     result_dir = os.path.join(
         "Result-Interm", watermarker, dataset, evader, arch
     )

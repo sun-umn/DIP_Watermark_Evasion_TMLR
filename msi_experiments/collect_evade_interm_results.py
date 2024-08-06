@@ -86,6 +86,8 @@ def main(args):
         else:
             print("Watermark of {} does not work properly using {} watermarker.".format(img_name, args.watermarker))
             print("Skip recon.  \n")
+        
+        print("Processed Image Index - {} | Name - {}".format(idx, img_name))
     
     # # === Test Vis ===
     # test_img = interm_res["interm_recon"][0]
