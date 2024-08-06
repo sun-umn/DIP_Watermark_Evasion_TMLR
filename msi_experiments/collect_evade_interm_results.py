@@ -15,7 +15,8 @@ def main(args):
     # === Get watermarked data ===
     dataset_root_dir = os.path.join(".", "dataset", args.watermarker, args.dataset)
     is_stegastamp = args.watermarker == "StegaStamp"
-    dataset = WatermarkedImageDataset(dataset_root_dir, is_stegastamp)
+    is_tree_ring = args.watermarker == "Tree-Ring"
+    dataset = WatermarkedImageDataset(dataset_root_dir, is_stegastamp, is_tree_ring)
     print("Experimenting dataset: {}".format(dataset_root_dir))
 
     # === Constrcut config wrapper ===
@@ -57,7 +58,7 @@ def main(args):
     print("Total num. of images: {}".format(num_images))
     print("Interm. collection started ...")
 
-    for idx in range(num_images):
+    for idx in range(args.start, num_images, 1):
         sample_data = dataset[idx]
 
         watermark_gt_str = eval(sample_data["watermark_gt_str"])[0]
@@ -134,6 +135,10 @@ if __name__ == "__main__":
                 diffpure --- dummy
         """,
         default="0.1"
+    )
+    parser.add_argument(
+        "--start", dest="start", type=int, help="Sample index to start experiment",
+        default=0
     )
     args = parser.parse_args()
     main(args)
