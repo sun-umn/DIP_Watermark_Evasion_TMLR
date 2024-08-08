@@ -118,13 +118,37 @@ if __name__ == "__main__":
     # print(data["interm_recon"][5])
 
     # Count File numbers 
-    watermarker = "dwtDctSvd"
+    watermarker = "TrustMark"
     dataset = "DiffusionDB"
-    evader = "diffpure"
+    evader = "corrupters"
+    archs = ["brightness", "contrast", "gaussian_noise", "jpeg", "bm3d"]
+    for arch in archs:
+        result_dir = os.path.join(
+            "Result-Interm", watermarker, dataset, evader, arch
+        )
+        file_list = [f for f in os.listdir(result_dir)]
+        print("{} - {} - {} - {}".format(watermarker, dataset, evader, arch))
+        print("Number of files processed: ", len(file_list))
+        print()
+    
+    evaders = ["diffuser", "diffpure"]
     arch = "dummy"
+    for evader in evaders:
+        result_dir = os.path.join(
+            "Result-Interm", watermarker, dataset, evader, arch
+        )
+        file_list = [f for f in os.listdir(result_dir)]
+        print("{} - {} - {} - {}".format(watermarker, dataset, evader, arch))
+        print("Number of files processed: ", len(file_list))
+        print()
+    
+    evader = "dip"
+    arch = "vanila"
     result_dir = os.path.join(
         "Result-Interm", watermarker, dataset, evader, arch
     )
     file_list = [f for f in os.listdir(result_dir)]
+    print("{} - {} - {} - {}".format(watermarker, dataset, evader, arch))
     print("Number of files processed: ", len(file_list))
+    print()
     print("Completed.")
