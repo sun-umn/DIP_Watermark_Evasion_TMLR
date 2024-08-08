@@ -57,8 +57,10 @@ def main(args):
     num_images = len(dataset)
     print("Total num. of images: {}".format(num_images))
     print("Interm. collection started ...")
+    end = min(num_images, args.end)
+    print("... util the {}-th image.".format(end))
 
-    for idx in range(args.start, num_images, 1):
+    for idx in range(args.start, end, 1):
         sample_data = dataset[idx]
 
         watermark_gt_str = eval(sample_data["watermark_gt_str"])[0]
@@ -141,6 +143,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--start", dest="start", type=int, help="Sample index to start experiment",
         default=0
+    )
+    parser.add_argument(
+        "--end", dest="end", type=int, help="Sample index to end experiment",
+        default=3000
     )
     args = parser.parse_args()
     main(args)

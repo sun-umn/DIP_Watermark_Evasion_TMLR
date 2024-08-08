@@ -167,7 +167,7 @@ def get_levels(cfg):
     elif method_name.lower() == "gaussian_noise":
         return np.arange(5, 101, 5) / 100.
     elif method_name.lower() == "bm3d":
-        return np.arange(10, 101, 10) / 100. 
+        return np.arange(1, 11, 2) / 10. 
     elif method_name.lower() == "jpeg":
         return np.arange(5, 101, 5) / 100. 
     elif method_name.lower() == "brightness":

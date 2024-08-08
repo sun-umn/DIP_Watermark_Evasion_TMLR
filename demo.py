@@ -118,10 +118,10 @@ if __name__ == "__main__":
     # print(data["interm_recon"][5])
 
     # Count File numbers 
-    watermarker = "rivaGan"
-    dataset = "COCO"
-    evader = "corrupters"
-    arch = "bm3d"
+    watermarker = "dwtDctSvd"
+    dataset = "DiffusionDB"
+    evader = "diffpure"
+    arch = "dummy"
     result_dir = os.path.join(
         "Result-Interm", watermarker, dataset, evader, arch
     )
