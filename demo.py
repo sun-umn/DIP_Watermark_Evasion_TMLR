@@ -118,8 +118,8 @@ if __name__ == "__main__":
     # print(data["interm_recon"][5])
 
     # Count File numbers 
-    watermarker = "TrustMark"
-    dataset = "DiffusionDB"
+    watermarker = "Tree-Ring"
+    dataset = "Gustavosta"
 
     evader = "corrupters"
     archs = ["brightness", "contrast", "gaussian_noise", "jpeg", "bm3d"]
