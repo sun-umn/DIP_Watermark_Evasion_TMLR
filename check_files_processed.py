@@ -46,7 +46,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
-        default="diffpure"
+        default="corrupters"
     )
     parser.add_argument(
         "--arch", dest="arch", type=str, 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 diffuser --- Do not need.
                 diffpure --- dummy
         """,
-        default="dummy"
+        default="bm3d"
     )
     parser.add_argument(
         "--res_type", dest="res_type", type=str, default="Result-Interm",
