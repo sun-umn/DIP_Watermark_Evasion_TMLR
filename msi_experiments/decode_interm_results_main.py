@@ -44,114 +44,119 @@ def main(args):
     os.makedirs(save_root_dir, exist_ok=True)
     
     # === Process each file ===
-    for file_name in file_names:
-        # Retrieve the im_w name
-        im_w_file_name = file_name.replace(".pkl", ".png")
-        if "_hidden" in im_w_file_name:
-            im_orig_name = im_w_file_name.replace("_hidden", "")
+    for n_file, file_name in enumerate(file_names):
+        if n_file < args.start:
+            print("Skip {}".format(file_name))
+        elif n_file >= args.end:
+            return
         else:
-            im_orig_name = im_w_file_name
+            # Retrieve the im_w name
+            im_w_file_name = file_name.replace(".pkl", ".png")
+            if "_hidden" in im_w_file_name:
+                im_orig_name = im_w_file_name.replace("_hidden", "")
+            else:
+                im_orig_name = im_w_file_name
 
-        # Readin the intermediate files
-        data_file_path = os.path.join(data_root_dir, file_name)
-        with open(data_file_path, 'rb') as handle:
-            data_dict = pickle.load(handle)
-        # Readin the im_w into bgr uint8 format
-        im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
-        im_w_bgr_uint8 = cv2.imread(im_w_path)
-        # Readin the 
-        im_orig_path = os.path.join(im_orig_root_dir, im_orig_name)
-        im_orig_bgr_uint8 = cv2.imread(im_orig_path)
-        
-        # Get the reconstructed data from the interm. result
-        if args.evade_method == "WevadeBQ":
-            img_recon_list = data_dict["best_recon"]
-        else:
-            img_recon_list = data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
-        n_recon = len(img_recon_list)
-        print("Total number of interm. recon. to process: [{}]".format(n_recon))
-
-        # === Initiate a encoder & decoder ===
-        watermark_gt_str = data_dict["watermark_gt_str"]
-        if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
-            watermark_gt_str = eval(data_dict["watermark_gt_str"])[0]
-        watermark_gt = watermark_str_to_numpy(watermark_gt_str)
-        watermarker_configs = {
-            "watermarker": args.watermarker,
-            "watermark_gt": watermark_gt
-        }
-        watermarker = get_watermarkers(watermarker_configs)
-
-        # Process each inter. recon
-        watermark_decoded_log = []  # A list to save decoded watermark
-        index_log = data_dict["index"]
-        psnr_orig_log = []
-        mse_orig_log = []
-        psnr_w_log = []
-        mse_w_log = []
-        ssim_orig_log = []
-        ssim_w_log = []
-        for img_idx in range(n_recon):
-            img_bgr_uint8 = img_recon_list[img_idx]    # shape [512, 512, 3]
-            if args.watermarker == "StegaStamp" and args.arch in ["cheng2020-anchor", "mbt2018"]:
-                img_bgr_uint8 = cv2.resize(img_bgr_uint8, (400, 400), interpolation=cv2.INTER_LINEAR)
-
-            # =================== YOUR CODE HERE =========================== #
+            # Readin the intermediate files
+            data_file_path = os.path.join(data_root_dir, file_name)
+            with open(data_file_path, 'rb') as handle:
+                data_dict = pickle.load(handle)
+            # Readin the im_w into bgr uint8 format
+            im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
+            im_w_bgr_uint8 = cv2.imread(im_w_path)
+            # Readin the 
+            im_orig_path = os.path.join(im_orig_root_dir, im_orig_name)
+            im_orig_bgr_uint8 = cv2.imread(im_orig_path)
             
-            # Step 0: if you need to change the input format
-            img_input = img_bgr_uint8
+            # Get the reconstructed data from the interm. result
+            if args.evade_method == "WevadeBQ":
+                img_recon_list = data_dict["best_recon"]
+            else:
+                img_recon_list = data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
+            n_recon = len(img_recon_list)
+            print("Total number of interm. recon. to process: [{}]".format(n_recon))
 
-            # Step 1: Decode the interm. result
-            watermark_decoded = watermarker.decode(img_input)
-            watermark_decoded_str = watermark_np_to_str(watermark_decoded)
+            # === Initiate a encoder & decoder ===
+            watermark_gt_str = data_dict["watermark_gt_str"]
+            if watermark_gt_str[0] == "[":  # Some historical none distructive bug :( will cause this reformatting
+                watermark_gt_str = eval(data_dict["watermark_gt_str"])[0]
+            watermark_gt = watermark_str_to_numpy(watermark_gt_str)
+            watermarker_configs = {
+                "watermarker": args.watermarker,
+                "watermark_gt": watermark_gt
+            }
+            watermarker = get_watermarkers(watermarker_configs)
 
-            # Step 2: log the result
-            watermark_decoded_log.append(watermark_decoded_str)
+            # Process each inter. recon
+            watermark_decoded_log = []  # A list to save decoded watermark
+            index_log = data_dict["index"]
+            psnr_orig_log = []
+            mse_orig_log = []
+            psnr_w_log = []
+            mse_w_log = []
+            ssim_orig_log = []
+            ssim_w_log = []
+            for img_idx in range(n_recon):
+                img_bgr_uint8 = img_recon_list[img_idx]    # shape [512, 512, 3]
+                if args.watermarker == "StegaStamp" and args.arch in ["cheng2020-anchor", "mbt2018"]:
+                    img_bgr_uint8 = cv2.resize(img_bgr_uint8, (400, 400), interpolation=cv2.INTER_LINEAR)
 
-            # ============================================================= #
+                # =================== YOUR CODE HERE =========================== #
+                
+                # Step 0: if you need to change the input format
+                img_input = img_bgr_uint8
 
-            # Calculate the quality: mse and psnr
-            mse_recon_orig = calc_mse(im_orig_bgr_uint8, img_bgr_uint8)
-            mse_recon_w = calc_mse(im_w_bgr_uint8, img_bgr_uint8)
+                # Step 1: Decode the interm. result
+                watermark_decoded = watermarker.decode(img_input)
+                watermark_decoded_str = watermark_np_to_str(watermark_decoded)
 
-            psnr_recon_orig = compute_psnr(
-                im_orig_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
-            )
-            psnr_recon_w = compute_psnr(
-                im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
-            )
-            ssim_recon_orig = compute_ssim(
-                im_orig_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
-            )
-            ssim_recon_w = compute_ssim(
-                im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
-            )
+                # Step 2: log the result
+                watermark_decoded_log.append(watermark_decoded_str)
 
-            
-            mse_orig_log.append(mse_recon_orig)
-            mse_w_log.append(mse_recon_w)
-            psnr_orig_log.append(psnr_recon_orig)
-            psnr_w_log.append(psnr_recon_w)
-            ssim_orig_log.append(ssim_recon_orig)
-            ssim_w_log.append(ssim_recon_w)
+                # ============================================================= #
 
-        # Save the result
-        processed_dict = {
-            "index": index_log,
-            "watermark_gt_str": watermark_gt_str, # Some historical none distructive bug :( will cause this reformatting
-            "watermark_decoded": watermark_decoded_log,
-            # "mse_orig": mse_orig_log,
-            "psnr_orig": psnr_orig_log,
-            "ssim_orig": ssim_orig_log,
-            # "mse_w": mse_w_log,
-            "psnr_w": psnr_w_log,
-            "ssim_w": ssim_w_log
-        }
+                # Calculate the quality: mse and psnr
+                mse_recon_orig = calc_mse(im_orig_bgr_uint8, img_bgr_uint8)
+                mse_recon_w = calc_mse(im_w_bgr_uint8, img_bgr_uint8)
 
-        save_name = os.path.join(save_root_dir, file_name)
-        with open(save_name, 'wb') as handle:
-            pickle.dump(processed_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        print("Decoded Interm. result saved to {}".format(save_name))
+                psnr_recon_orig = compute_psnr(
+                    im_orig_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+                )
+                psnr_recon_w = compute_psnr(
+                    im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+                )
+                ssim_recon_orig = compute_ssim(
+                    im_orig_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+                )
+                ssim_recon_w = compute_ssim(
+                    im_w_bgr_uint8.astype(np.int16), img_bgr_uint8.astype(np.int16), data_range=255
+                )
+
+                
+                mse_orig_log.append(mse_recon_orig)
+                mse_w_log.append(mse_recon_w)
+                psnr_orig_log.append(psnr_recon_orig)
+                psnr_w_log.append(psnr_recon_w)
+                ssim_orig_log.append(ssim_recon_orig)
+                ssim_w_log.append(ssim_recon_w)
+
+            # Save the result
+            processed_dict = {
+                "index": index_log,
+                "watermark_gt_str": watermark_gt_str, # Some historical none distructive bug :( will cause this reformatting
+                "watermark_decoded": watermark_decoded_log,
+                # "mse_orig": mse_orig_log,
+                "psnr_orig": psnr_orig_log,
+                "ssim_orig": ssim_orig_log,
+                # "mse_w": mse_w_log,
+                "psnr_w": psnr_w_log,
+                "ssim_w": ssim_w_log
+            }
+
+            save_name = os.path.join(save_root_dir, file_name)
+            with open(save_name, 'wb') as handle:
+                pickle.dump(processed_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            print("Decoded Interm. result saved to {}".format(save_name))
 
 
 if __name__ == "__main__":
@@ -182,6 +187,14 @@ if __name__ == "__main__":
                 diffuser --- Do not need.
         """,
         default="cheng2020-anchor"
+    )
+    parser.add_argument(
+        "--start", dest="start", type=int, help="Specification of evasion method.",
+        default=0
+    )
+    parser.add_argument(
+        "--end", dest="end", type=int, help="Specification of evasion method.",
+        default=0
     )
     args = parser.parse_args()
     main(args)
