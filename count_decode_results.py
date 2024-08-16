@@ -6,8 +6,8 @@ import pickle
 if __name__ == "__main__":
 
     # Count File numbers 
-    watermarker = "rivaGan"
-    dataset = "COCO"
+    watermarker = "Tree-Ring"
+    dataset = "Gustavosta"
 
     evader = "corrupters"
     archs = ["brightness", "contrast", "gaussian_noise", "jpeg", "bm3d"]
