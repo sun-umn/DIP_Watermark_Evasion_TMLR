@@ -24,9 +24,10 @@ def compute_ssim(a, b, data_range):
 watermarkers = [
     "dwtDctSvd",
     "rivaGan",
-    "SteganoGAN",
+    "Rosteals",
     "SSL",
-    "StegaStamp"
+    "StegaStamp",
+    "TrustMark"
 ]
 
 
