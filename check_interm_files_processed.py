@@ -38,11 +38,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd, SSL, SteganoGAN, StegaStamp]",
-        default="Tree-Ring"
+        default="StegaStamp"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, help="Dataset [COCO, DiffusionDB]",
-        default="Gustavosta"
+        default="COCO"
     )
     parser.add_argument(
         "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",

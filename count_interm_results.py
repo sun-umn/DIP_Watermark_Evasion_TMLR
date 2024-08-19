@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # print(data["interm_recon"][5])
 
     # Count File numbers 
-    watermarker = "SSL"
+    watermarker = "StegaStamp"
     dataset = "COCO"
 
     evader = "corrupters"
