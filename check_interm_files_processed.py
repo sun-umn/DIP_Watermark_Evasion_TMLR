@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--watermarker", dest="watermarker", type=str, 
         help="Specification of watermarking method. [rivaGan, dwtDctSvd, SSL, SteganoGAN, StegaStamp]",
-        default="StegaStamp"
+        default="SSL"
     )
     parser.add_argument(
         "--dataset", dest="dataset", type=str, help="Dataset [COCO, DiffusionDB]",

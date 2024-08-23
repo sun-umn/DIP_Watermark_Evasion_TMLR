@@ -57,10 +57,7 @@ def main(args):
 
         # (1) Retrieve the im_w name
         im_orig_name = file_name.replace(".pkl", ".png")
-        if args.watermarker == "StegaStamp":
-            im_w_file_name = im_orig_name.replace(".png", "_hidden.png")
-        else:
-            im_w_file_name = im_orig_name
+        im_w_file_name = im_orig_name
 
         # Readin the im_w into bgr uint8 format
         im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
@@ -123,10 +120,8 @@ def main(args):
             evade_success_log.append(1)
 
             # After getting the best index, calculate the ssim and quantile metric respectively
-            if args.watermarker != "StegaStamp": # Retrive the interm file
-                interm_file_path = os.path.join(interm_root_dir, file_name)
-            else:
-                interm_file_path = os.path.join(interm_root_dir, file_name.replace(".pkl", "_hidden.pkl")) 
+            interm_file_path = os.path.join(interm_root_dir, file_name)
+
             # Load Data
             with open(interm_file_path, 'rb') as handle:
                 interm_data_dict = pickle.load(handle)
