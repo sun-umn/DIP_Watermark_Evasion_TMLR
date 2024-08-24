@@ -56,8 +56,12 @@ def main(args):
         file_path = os.path.join(data_root_dir, file_name)
 
         # (1) Retrieve the im_w name
-        im_orig_name = file_name.replace(".pkl", ".png")
-        im_w_file_name = im_orig_name
+        if args.watermarker == "StegaStamp":
+            im_orig_name = file_name.replace("_hidden.pkl", ".png")
+            im_w_file_name = file_name.replace(".pkl", ".png")
+        else:
+            im_orig_name = file_name.replace(".pkl", ".png")
+            im_w_file_name = im_orig_name
 
         # Readin the im_w into bgr uint8 format
         im_w_path = os.path.join(im_w_root_dir, im_w_file_name)

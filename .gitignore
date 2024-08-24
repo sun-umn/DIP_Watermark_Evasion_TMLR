@@ -10,6 +10,7 @@ DiffPure/*
 examples/COCO
 examples/DiffusionDB
 DIP_Old*
+logs/
 
 # === Standard build files ====
 

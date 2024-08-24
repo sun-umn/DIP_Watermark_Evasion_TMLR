@@ -1,0 +1,9 @@
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method corrupters --arch brightness
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method corrupters --arch contrast
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method corrupters --arch gaussian_noise
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method corrupters --arch jpeg
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method corrupters --arch bm3d
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method diffpure --arch dummy
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method diffuser --arch dummy
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method vae --arch cheng2020-anchor
+python msi_experiments/process_decoded_data_main.py  --watermarker rivaGan --dataset DiffusionDB --evade_method dip --arch vanila
