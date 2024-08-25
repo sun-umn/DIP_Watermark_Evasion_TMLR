@@ -44,7 +44,7 @@ def main(args):
         psnr_dict[watermarker] = []
 
     max_value = 0 
-    for i in range(1, 100, 1):
+    for i in range(1, 2001, 1):
         # im_name = args.im_name
         im_name = "Img-%d.png" % i
 
