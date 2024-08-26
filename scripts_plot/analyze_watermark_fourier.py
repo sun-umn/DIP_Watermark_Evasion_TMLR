@@ -19,9 +19,10 @@ from utils.general import watermark_np_to_str, uint8_to_float
 watermarkers = [
     "dwtDctSvd",
     "rivaGan",
-    "SteganoGAN",
+    "Rosteals",
     "SSL",
-    "StegaStamp"
+    "StegaStamp",
+    "TrustMark"
 ]
 
 
