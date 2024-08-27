@@ -35,6 +35,7 @@ def main(args):
     pkl_name = args.im_name.replace(".png", ".pkl")
     if watermarker == "StegaStamp":
         im_name = im_name.replace(".png", "_hidden.png")
+        pkl_name = pkl_name.replace(".pkl", "_hidden.pkl")
 
     # === Read in watermarked images ===
     im_w_path = os.path.join("dataset", watermarker, dataset, "encoder_img", im_name)
@@ -104,7 +105,8 @@ def main(args):
 
     # === Plot the result ===
     # TBD: Make it better looking 
-    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(4, 3))
+    # fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(4, 2))
+    fig, ax = plt.subplots(ncols=1, nrows=1, figsize=(6, 2))
     for i in range(5):
         if i == 0:
             msg = "{} (lowest)".format(i+1)
@@ -114,6 +116,7 @@ def main(args):
             msg = "{}".format(i+1)
         ax.plot(index_log, avg_err[:, i], label=msg, lw=2, alpha=0.8)
     # ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=15, framealpha=0.3)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),fancybox=True, shadow=True, ncol=5)
     ax.set_xticks([0, 200, 400])
     ax.set_yticks([0.5, 1.0])
     ax.grid("both")
