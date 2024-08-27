@@ -1,0 +1,264 @@
+
+import sys, os
+dir_path = os.path.abspath(".")
+sys.path.append(dir_path)
+dir_path = os.path.abspath("..")
+sys.path.append(dir_path)
+
+import argparse, pickle, os, cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_theme()
+from skimage.metrics import peak_signal_noise_ratio as compute_psnr
+from utils.general import compute_ssim, save_image_bgr
+import pandas as pd
+
+
+def main(args):
+    print("=== Detection Threshold {} ===".format(args.detection_threshold))
+    data_root_dir = os.path.join("Result-Decoded", args.watermarker, args.dataset, args.evade_method, args.arch)
+    file_names = [f for f in os.listdir(data_root_dir) if ".pkl" in f]
+
+    # path to get im_clean and im_w
+    im_w_root_dir = os.path.join("dataset", args.watermarker, args.dataset, "encoder_img")
+
+    # path to get the interm result (for ssim, quantile metric calculation)
+    interm_root_dir = os.path.join("Result-Interm", args.watermarker, args.dataset, args.evade_method, args.arch)
+
+    # === Create Save directory ===
+    save_root_dir = os.path.join("Result-Stats-Summary", args.watermarker, args.dataset, args.evade_method)
+    os.makedirs(save_root_dir, exist_ok=True)
+    save_file_name = os.path.join(save_root_dir, "{}.pkl".format(args.arch))
+
+    # Logs to save after processing
+    best_psnr_w_log = []
+    best_ssim_w_log = []
+    best_quantile_log = []
+    evade_success_log = []  # Check if this is close to 100%, otherwise discard the shitty evasion algo.
+    
+    # Collect all interm. results and calc. necessary metrics
+    for file_name in file_names:
+        file_path = os.path.join(data_root_dir, file_name)
+
+        # (1) Retrieve the im_w name
+        if args.watermarker == "StegaStamp":
+            im_orig_name = file_name.replace("_hidden.pkl", ".png")
+            im_w_file_name = file_name.replace(".pkl", ".png")
+        else:
+            im_orig_name = file_name.replace(".pkl", ".png")
+            im_w_file_name = im_orig_name
+
+        # Readin the im_w into bgr uint8 format
+        im_w_path = os.path.join(im_w_root_dir, im_w_file_name)
+        im_w_bgr_uint8 = cv2.imread(im_w_path)
+        im_w_int = im_w_bgr_uint8.astype(np.int32)
+
+        # Load Data
+        with open(file_path, 'rb') as handle:
+            data_dict = pickle.load(handle)
+        
+        index_log = data_dict["index"]
+        psnr_w_log = data_dict["psnr_w"]
+        ssim_w_log = data_dict["ssim_w"]
+        distance_metrics_log = data_dict["watermark_decoded"]
+
+        num_interm_data = len(psnr_w_log)
+
+        # === To finde the best evade Iter ===
+        best_index, best_psnr_w, best_psnr_orig = None, -float("inf"), None
+        detection_threshold = args.detection_threshold
+        # Exausive search 
+        for idx in range(num_interm_data): 
+            psnr_w = psnr_w_log[idx]
+            distance_metric = distance_metrics_log[idx]
+
+            condition_1 = distance_metric < detection_threshold
+            condition_2 = psnr_w > best_psnr_w
+            if condition_1 and condition_2:
+                best_index = idx
+                best_psnr_w = psnr_w
+
+        if best_index is None:
+            evade_success_log.append(0)
+        else:
+            best_psnr_w_log.append(best_psnr_w)
+            evade_success_log.append(1)
+
+            # After getting the best index, calculate the ssim and quantile metric respectively
+            interm_file_path = os.path.join(interm_root_dir, file_name)
+
+            # Load Data
+            with open(interm_file_path, 'rb') as handle:
+                interm_data_dict = pickle.load(handle)
+            if args.evade_method == "WevadeBQ":
+                img_recon_list = interm_data_dict["best_recon"]
+            else:
+                img_recon_list = interm_data_dict["interm_recon"]  # A list of recon. image in "bgr uint8 np" format (cv2 standard format)
+            best_recon = img_recon_list[best_index]  # bgr_uint8
+            if args.arch == "cheng2020-anchor" and args.watermarker == "StegaStamp":
+                best_recon = cv2.resize(best_recon, (400, 400), interpolation=cv2.INTER_AREA)
+            best_recon_int = best_recon.astype(np.int32)
+
+            # SSIM
+            ssim_w = compute_ssim(
+                im_w_int, best_recon_int, data_range=255
+            )
+            best_ssim_w_log.append(ssim_w)
+
+            # Quantile 90 % value
+            err_values = np.abs(im_w_int - best_recon_int).flatten()
+            quantile = np.quantile(err_values, 0.9)
+            best_quantile_log.append(quantile)
+
+            # === Sanity Check === 1) Vis im_orig; 2) Vis im_best_recon; 3) histo of err_values
+            if file_names[0] == file_name:
+                save_name = os.path.join(save_root_dir, "{}_{}_recon.png".format(args.evade_method, args.arch))
+                save_image_bgr(best_recon, save_name)
+
+                fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 3))
+                n, bins, _ = ax.hist(err_values, bins=np.amax(err_values), alpha=0.6)
+                ax.vlines(quantile, ymin=0.01, ymax=1e6, color="black", ls="dashed", lw=2,  label=r"$x = {:d}$".format(int(quantile)))
+                ax.set_yscale("log")
+                ax.yaxis.grid(True)
+                ax.xaxis.grid(False)
+                ax.set_xticks([255])
+                ax.set_xlim([0, 255])
+                ax.set_ylim([0.1, 1e6])
+                ax.set_yticks([1e2, 1e5])
+                ax.tick_params(axis='y', labelsize=25)
+                ax.tick_params(axis='x', labelsize=25)
+                ax.legend(loc='upper right', ncol=1, fancybox=True, shadow=False, fontsize=25, framealpha=0.3)
+                plt.tight_layout()
+                save_name = os.path.join(save_root_dir, "{}_{}_histo.png".format(args.evade_method, args.arch))
+                plt.savefig(save_name)
+                plt.close(fig)
+
+        # # === Sanity Check === Plot the psnr and bitwise acc curve
+        if file_names[0] == file_name and args.evade_method != "WevadeBQ" and best_index is not None:
+            best_index = index_log[best_index]
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(4, 2))
+            ax.plot(index_log, psnr_w_log, label=r"PSNR ($I_w$)", color="blue", ls="dashed", lw=2, alpha=0.6)
+            if best_index is not None:
+                # ax[0].vlines(best_index, ymin=np.amin(psnr_w_log), ymax=np.amax(psnr_w_log), color="black", ls="dashed", label="Best Evade Iter.")
+                ax.vlines(best_index, ymin=9.5, ymax=43, color="black", ls="dashed", lw=2, alpha=0.6)
+            # ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            
+            ax.tick_params(axis='y', labelsize=20)
+            ax.set_ylim([10, 45])
+            ax.set_xlim([-5, 500])
+            ax.set_yticks([])
+            ax.set_xticks([])
+            plt.tight_layout()
+            save_name = os.path.join(save_root_dir, "{}_{}_psnr.png".format(args.evade_method, args.arch))
+            plt.savefig(save_name, bbox_inches='tight')
+            
+            fig, ax = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(4, 2))
+            ax.plot(index_log, distance_metrics_log, label="Distance Metric", lw=2, alpha=0.6)
+            # ax[1].hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", label="Detection Thres.")
+            ax.hlines(y=detection_threshold, xmin=np.amin(index_log), xmax=np.amax(index_log), ls="dashed", color="orange", lw=2, alpha=0.6)
+            if best_index is not None:
+                # ax[1].vlines(best_index, ymin=0, ymax=1, color="black", ls="dashed", label="Best Evade Iter.")
+                ax.vlines(best_index, ymin=-0.1, ymax=1.1, color="black", ls="dashed", lw=2, alpha=0.6)
+            # ax.legend(loc='lower right', ncol=1, fancybox=True, shadow=False, fontsize=20, framealpha=0.3)
+            # ax[1].set_yticks([0.25, 0.75])
+            # ax[1].set_xticks([0, 200, 400])
+            ax.set_yticks([])
+            ax.set_xticks([])
+            ax.set_ylim([-0.05, 1.05])
+            ax.set_xlim([-5, 500])
+            ax.tick_params(axis='x', labelsize=20)
+            ax.tick_params(axis='y', labelsize=20)
+            plt.tight_layout()
+            save_name = os.path.join(save_root_dir, "{}_{}_bt_acc.png".format(args.evade_method, args.arch))
+            plt.savefig(save_name, bbox_inches='tight')
+
+    # === Summarize Data ===
+    mean_psnr_w, std_psnr_w = np.mean(best_psnr_w_log), np.std(best_psnr_w_log)
+    mean_ssim_w, std_ssim_w = np.mean(best_ssim_w_log), np.std(best_ssim_w_log)
+    mean_quantile, std_quantile = np.mean(best_quantile_log), np.std(best_quantile_log)
+    evade_success_rate = np.mean(evade_success_log)
+    print("===== Processed Summary: Watermarker [{}] - Dataset [{}] =====".format(args.watermarker, args.dataset))
+    print("Best PSNR-W: Mean - STD: ")
+    print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_w, std_psnr_w))
+    print("Best SSIM-W: Mean - STD: ")
+    print("  [{:.02f}] - [{:.02f}]".format(mean_ssim_w, std_ssim_w))
+    print("Best Quantile (90%) watermark pixel value: ")
+    print("  [{:.02f}] - [{:.02f}]".format(mean_quantile, std_quantile))
+    # print("Best PSNR-W: Mean - STD: ")
+    # print("  [{:.02f}] - [{:.02f}]".format(mean_psnr_w, std_psnr_w))
+    print("Evasion success rate: {:.03f} %".format(evade_success_rate * 100))
+
+    # === Save processed data ===
+    save_dict = {
+        "best_psnr_w": best_psnr_w_log,
+        "best_psnr_w": best_psnr_w_log,
+        "best_ssim_w": best_ssim_w_log,
+        "best_quantile_log": best_quantile_log,
+        "evade_success_rate": [np.mean(evade_success_log)]
+    }
+    # with open(save_file_name, 'wb') as handle:
+    #     pickle.dump(save_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # print("Decoded Interm. result saved to {}".format(save_file_name))
+
+    save_file_name = save_file_name.replace(".pkl", ".csv")
+    df = pd.DataFrame.from_dict(save_dict, orient='index')
+    df.to_csv(save_file_name)
+    print("Decoded Interm. result saved to {}".format(save_file_name))
+    print("=========================================================== \n")
+        
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Some arguments to play with.')
+    parser.add_argument(
+        "--watermarker", dest="watermarker", type=str, 
+        help="Specification of watermarking method. [rivaGan, dwtDctSvd]",
+        default="Tree-Ring"
+    )
+    parser.add_argument(
+        "--dataset", dest="dataset", type=str, 
+        help="Dataset [COCO, DiffusionDB]",
+        default="Gustavosta"
+    )
+    parser.add_argument(
+        "--evade_method", dest="evade_method", type=str, help="Specification of evasion method.",
+        default="vae"
+    )
+    parser.add_argument(
+        "--detection_threshold", dest="detection_threshold", type=float, help="Threshold for bitwise acc.",
+        default=20.0
+    )
+    parser.add_argument(
+        "--arch", dest="arch", type=str, 
+        help="""
+            Secondary specification of evasion method (if there are other choices).
+
+            Valid values a listed below:
+                dip --- ["vanila", "random_projector"],
+                vae --- ["cheng2020-anchor", "mbt2018", "bmshj2018-factorized"],
+                corrupters --- ["gaussian_blur", "gaussian_noise", "bm3d", "jpeg", "brightness", "contrast"]
+                diffuser --- Do not need.
+                diffpure --- ["0.1", "0.2", "0.3"]
+        """,
+        default="cheng2020-anchor"
+    )
+    args = parser.parse_args()
+    
+    print(" ===== Start ======")
+    
+    detection_thres_list = np.arange(20, 90, 10)
+    for d_thres in detection_thres_list:
+        args.detection_threshold = d_thres
+        main(args)
+
+    # root_lv1 = os.path.join("Result-Decoded", args.watermarker, args.dataset)
+    # corrupter_names = [f for f in os.listdir(root_lv1)]
+    # for corrupter in corrupter_names:
+    #     root_lv2 = os.path.join(root_lv1, corrupter)
+    #     arch_names = [f for f in os.listdir(root_lv2) if "blur" not in f]
+    #     for arch in arch_names:
+    #         args.evade_method = corrupter
+    #         args.arch = arch
+    #         print("Processing: {} - {} - {} - {}".format(args.watermarker, args.dataset, args.evade_method, args.arch))
+    #         main(args)
+    print(" ===== Completed. ===== ")
