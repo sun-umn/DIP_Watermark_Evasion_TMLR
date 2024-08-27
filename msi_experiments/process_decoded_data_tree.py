@@ -246,7 +246,7 @@ if __name__ == "__main__":
     
     print(" ===== Start ======")
     
-    detection_thres_list = np.arange(20, 90, 10)
+    detection_thres_list = np.arange(40, 90, 10)
     for d_thres in detection_thres_list:
         args.detection_threshold = d_thres
         main(args)
