@@ -122,7 +122,7 @@ def main(args):
     ax.grid("both")
     ax.set_ylim([0, 1.2])
     ax.tick_params(axis='x', labelsize=15)
-    ax.tick_params(axis='y', labelsize=0)
+    ax.tick_params(axis='y', labelsize=15)
     plt.tight_layout()
 
     vis_dir = os.path.join(".", "Vis-FBE")
