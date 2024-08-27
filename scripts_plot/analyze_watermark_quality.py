@@ -106,15 +106,17 @@ def main(args):
 
     # === Vis: Plot histograms (of Img-1) to visualize the err-pixel distribution of different watermark methods ===
     num_figs = len(watermarkers)
-    fig, ax = plt.subplots(nrows=num_figs, ncols=1, figsize=(6, 12), sharey=True)
+    fig, ax = plt.subplots(nrows=num_figs, ncols=1, figsize=(5, 12), sharey=True)
     for idx, watermarker in enumerate(watermarkers):
         ax_idx = idx
         counts, bins = histo_dict[watermarker][0]
         quantile = quantile_dict[watermarker][0]
         ax[ax_idx].hist(bins[:-1], bins, weights=counts, alpha=0.6)
+        max_value = 100
         ax[ax_idx].set_xlim([0, max_value])
         ax[ax_idx].set_yscale("log")
-        l1 = ax[ax_idx].vlines(x=quantile, ymin=0.1, ymax=1e6, lw=2, ls="dashed", color="black", label=r"$90 \% ~ quantile ~ (x = {:d})$".format(int(quantile)))
+        # l1 = ax[ax_idx].vlines(x=quantile, ymin=0.1, ymax=1e6, lw=2, ls="dashed", color="black", label=r"$90 \% ~ quantile ~ (x = {:d})$".format(int(quantile)))
+        l1 = ax[ax_idx].vlines(x=quantile, ymin=0.1, ymax=1e6, lw=2, ls="dashed", color="black", label=r"$x = {:d}$".format(int(quantile)))
         ax[ax_idx].yaxis.grid(True)
         ax[ax_idx].xaxis.grid(False)
         ax[ax_idx].set_yticks([1e2, 1e5])
