@@ -15,10 +15,11 @@ import pandas as pd
 
 
 THRESHOLDS_DICT = {
-    1: 20,
-    2: 40,
+    1: 40,
+    2: 50,
     3: 60,
-    4: 80,
+    4: 70,
+    5: 80,
 }
 
 def main(args):
@@ -42,7 +43,7 @@ def main(args):
         w_distance = data["Decode_W"]
         for key in THRESHOLDS_DICT.keys():
             value = THRESHOLDS_DICT[key]
-            if clean_distance >= value:
+            if clean_distance <= value:
                 res_dict_fpr[key].append(1)
             else:
                 res_dict_fpr[key].append(0)
