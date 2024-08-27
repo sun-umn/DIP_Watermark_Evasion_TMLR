@@ -142,7 +142,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--im_name", dest="im_name", type=str, help="Clean image name.",
-        default="Img-10.png"
+        default="Img-1.png"
     )
     parser.add_argument(
         "--dip_arch", dest="dip_arch", type=str, help="DIP arch.",

@@ -16,15 +16,24 @@ sns.set_theme()
 from utils.general import watermark_np_to_str, uint8_to_float
 
 
-watermarkers = [
-    "dwtDctSvd",
-    "rivaGan",
-    "Rosteals",
-    "SSL",
-    "StegaStamp",
-    "TrustMark"
-]
+# watermarkers = [
+#     "dwtDctSvd",
+#     "rivaGan",
+#     "Rosteals",
+#     "SSL",
+#     "StegaStamp",
+#     "TrustMark"
+# ]
 
+watermarkers = {
+    "dwtDctSvd": "DwtDctSVD",
+    "rivaGan": "rivaGAN",
+    "Rosteals": "RoSteALS",
+    "SSL": "SSL",
+    "StegaStamp": "StegaStamp",
+    "TrustMark": "TrustMark"
+}
+    
 
 def calculate_2dft(input):
     ft = np.fft.ifftshift(input)
@@ -110,7 +119,8 @@ def main(args):
     fourier_res_dict = {}
     
     # watermarker = "rivaGan"
-    for watermarker in watermarkers:
+    for key in watermarkers.keys():
+        watermarker = key
         if watermarker == "StegaStamp":
             im_w_name = im_name.replace(".png", "_hidden.png")
         else:
@@ -241,7 +251,7 @@ def main(args):
 
         figure, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 2))
 
-        ax.plot(keys, values, label=watermarker, lw=3, alpha=0.6)
+        ax.plot(keys, values, label=watermarkers[watermarker], lw=3, alpha=0.6)
         ax.plot(clean_keys, clean_values, color="orange", lw=3, alpha=0.6)
         ax.legend()
         ax.set_ylim([1, max_y*5])
@@ -254,7 +264,6 @@ def main(args):
         plt.tight_layout()
         plt.savefig(save_name)
         plt.close(figure)
-
 
 
 if __name__ == "__main__":
