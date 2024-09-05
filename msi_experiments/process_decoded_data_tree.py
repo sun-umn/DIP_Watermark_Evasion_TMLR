@@ -73,7 +73,7 @@ def main(args):
             psnr_w = psnr_w_log[idx]
             distance_metric = distance_metrics_log[idx]
 
-            condition_1 = distance_metric < detection_threshold
+            condition_1 = distance_metric > detection_threshold
             condition_2 = psnr_w > best_psnr_w
             if condition_1 and condition_2:
                 best_index = idx
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     
     print(" ===== Start ======")
     
-    detection_thres_list = np.arange(40, 90, 10)
+    detection_thres_list = np.arange(40, 80, 10)
     for d_thres in detection_thres_list:
         args.detection_threshold = d_thres
         main(args)
