@@ -41,3 +41,28 @@ class WatermarkedImageDataset(Dataset):
             "watermark_encoded_str": watermark_encoded_str
         }
         return res
+
+
+class HiddenInNoiseDataset(Dataset):
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+        self.image_names = [f for f in os.listdir(self.root_dir) if ".jpg" in f]
+        self.image_names.sort()
+    
+    def __len__(self):
+        return len(self.image_names)
+
+    def __getitem__(self, idx):
+        image_name = self.image_names[idx]
+        image_path = os.path.join(self.root_dir, image_name)
+        image_bgr_np = cv2.imread(image_path)
+        watermark_gt_str = "['22']"
+        watermark_encoded_str = "['22']"
+        # encode_success = data["Match"]
+        res = {
+            "image_name": image_name.split(".")[0],
+            "image_bgr_uint8": image_bgr_np,
+            "watermark_gt_str": watermark_gt_str,
+            "watermark_encoded_str": watermark_encoded_str
+        }
+        return res

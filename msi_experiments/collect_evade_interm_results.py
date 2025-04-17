@@ -6,7 +6,7 @@ sys.path.append(dir_path)
 
 import argparse, torch, pickle
 
-from utils.data_loader import WatermarkedImageDataset
+from utils.data_loader import WatermarkedImageDataset, HiddenInNoiseDataset
 from utils.general import save_image_bgr
 from evations import get_interm_collection_algo
 
@@ -16,7 +16,11 @@ def main(args):
     dataset_root_dir = os.path.join(".", "dataset", args.watermarker, args.dataset)
     is_stegastamp = args.watermarker == "StegaStamp"
     is_tree_ring = args.watermarker == "Tree-Ring"
-    dataset = WatermarkedImageDataset(dataset_root_dir, is_stegastamp, is_tree_ring)
+    is_hidden_in_noise = args.watermarker == "hidden-in-noise"
+    if not is_hidden_in_noise:
+        dataset = WatermarkedImageDataset(dataset_root_dir, is_stegastamp, is_tree_ring)
+    else:
+        dataset = HiddenInNoiseDataset(dataset_root_dir)
     print("Experimenting dataset: {}".format(dataset_root_dir))
 
     # === Constrcut config wrapper ===

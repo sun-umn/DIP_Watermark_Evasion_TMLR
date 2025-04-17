@@ -1,4 +1,6 @@
 # === Used in https://github.com/XuandongZhao/WatermarkAttacker/tree/main ===
+numpy==1.26.1
+huggingface_hub==0.22.2
 transformers
 opencv-python
 invisible-watermark
@@ -18,3 +20,6 @@ dataset
 
 # === Additional dependencies ===
 seaborn
+pytorch_msssim
+scikit-image
+bm3d
