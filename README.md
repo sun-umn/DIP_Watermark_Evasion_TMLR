@@ -1,10 +1,16 @@
 # DIP_Watermark_Evasion
-This repo contains the source code for paper [PAPER NAME](PAPER_LINK).
+This repo contains the source code for paper [A Baseline Method for Removing Invisible Image Watermarks
+using Deep Image Prior](https://openreview.net/forum?id=g85Vxlrq0O).
 
 If you find our work interesting or helpful, please consider a generous citation of our paper:
 
 ```
-BIB ITEM TO CITE OUR PAPER
+@article{liang2025baseline,
+  title={A Baseline Method for Removing Invisible Image Watermarks using Deep Image Prior},
+  author={Liang, Hengyue and Li, Taihui and Sun, Ju},
+  journal={arXiv preprint arXiv:2502.13998},
+  year={2025}
+}
 ```
 
 ## Introduction
